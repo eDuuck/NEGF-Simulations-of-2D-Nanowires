@@ -1,0 +1,143 @@
+classdef Sample < handle
+    %SAMPLE Summary of this class goes here
+    %   Detailed explanation goes here
+    
+    properties
+        width {mustBeNumeric}
+        length {mustBeNumeric}
+        epsilon {mustBeNumeric}
+        t {mustBeNumeric}
+        dim {mustBeNumeric}
+        M {mustBeNumeric}
+        units {mustBeNumeric}
+        arch
+        method
+        compressed {mustBeNumericOrLogical}
+        uniform {mustBeNumericOrLogical}
+        contacts
+        nbrOfContacts
+    end
+    
+    methods
+        function obj = Sample(w,l,eps,t,arch)
+            %SAMPLE(w,l,eps,t,arch) Construct an instance of this class
+            %   Creates a sample class which describes a sample with width
+            %   w, length l, basis function value of eps and t. If t is a
+            %   vector then the first value represents connection to
+            %   nearest neighbor and second value represents second
+            %   neighbor.
+            if nargin >= 4
+                obj.width = w;
+                obj.length = l;
+                obj.M = w*l;
+                obj.epsilon = eps;
+                obj.t = t;
+                obj.units = ones(w,l)*eps;
+                obj.uniform = true;
+            end
+            if nargin > 5
+                obj.arch = arch;
+            else
+                obj.arch = 'square';
+            end
+            if nargin == 2
+                obj.units = w;
+                obj.dim = size(w);
+                obj.length = obj.dim(2);
+                obj.width = obj.dim(1);
+                obj.M = numel(w);
+                obj.epsilon = w;
+                obj.t = l;
+                if(min(obj.units == obj.units(1,1),[],'all') == 1)
+                    obj.uniform = true;
+                else
+                    obj.uniform = false;
+                end
+                obj.arch = 'square';
+            end
+            obj.compressed = false;
+            obj.dim = [obj.width, obj.length];
+            obj.nbrOfContacts = 0;
+        end
+        
+        function status = compress(obj, doComp)
+            %COMPRESS(doComp) Compresses the matrix that describes the
+            %units that make up the sample or uncompresses if the sample is
+            %allready in an compressed state if doComp is left empty.
+            %Setting doComp to true guarantees that the sample gets
+            %compressed while setting it to false guarantees that it ends
+            %up in an uncompressed raw state.
+            if nargin > 1
+                change = xor(doComp,obj.compressed);
+            else
+                change = true;
+            end
+            if change
+                if ~obj.compressed
+                    [obj.units, obj.method] = compress(obj.units);
+                    obj.compressed = true;
+                else
+                    obj.units = decompress(obj.units, obj.method);
+                    obj.compressed = false;
+                end
+            end
+            status = obj.compressed;
+        end
+        
+        function append(obj,M, side)
+            %APPEND(M,side) Appends the matrix M to the specified side of
+            %the matrix that describes the sample. If side is left empty M
+            %is appended to the right of the sample. Side can be set to:
+            %
+            %   'r' = right
+            %   'u' = up
+            %   'l' = left
+            %   'd' = down
+            if nargin < 3
+                side = 'r';
+            end
+            obj.compress(false);
+            if side == 'u' || side == 'd'
+                if size(M,2) ~= obj.length
+                    error('Length of M does not match sample length.')
+                end
+                if side == 'u'
+                    obj.units = [M; obj.units];
+                else
+                    obj.units = [obj.units; M];
+                end
+                obj.width = obj.width + size(M,1);
+            elseif side == 'l' || side == 'r'
+                if size(M,1) ~= obj.width
+                    error('Width of M does not match sample width.')
+                end
+                if side == 'l'
+                    obj.units = [M, obj.units];
+                else
+                    obj.units = [obj.units, M];
+                end
+                obj.length = obj.length + size(M,2);
+            else
+                error('Side has to be either r,u,l,d');
+            end
+            obj.M = obj.M + numel(M);
+            obj.dim = [obj.width, obj.length];
+        end
+        
+        function M = getUnits(obj)
+            %GETUNITS Returns the matrix M that represents the sample in
+            %it's uncompressed form.
+            if obj.compressed
+                M = decompress(obj.units, obj.method);
+            else
+                M = obj.units;
+            end
+        end
+        
+        function addContact(obj, M, tau)
+            obj.nbrOfContacts = obj.nbrOfContacts + 1;
+            
+        end
+    end
+end
+
