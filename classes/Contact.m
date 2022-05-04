@@ -3,24 +3,24 @@ classdef Contact
     %   Detailed explanation goes here
     
     properties
-        g   {mustBeNumeric}
+        SC   {mustBeNumeric}
         tau {mustBeNumeric}
         beta {mustBeNumeric}
         alpha {mustBeNumeric}
         eta {mustBeNumeric}
+        length
     end
     
     methods
-        function obj = Contact(inputArg1,inputArg2)
+        function obj = Contact(SC,tau)
             %CONTACT Construct an instance of this class
-            %   Detailed explanation goes here
-            obj.Property1 = inputArg1 + inputArg2;
-        end
-        
-        function outputArg = method1(obj,inputArg)
-            %METHOD1 Summary of this method goes here
-            %   Detailed explanation goes here
-            outputArg = obj.Property1 + inputArg;
+            %   
+            if nargin == 1
+                obj.SC = SC;
+            elseif nargin == 2
+                obj.SC = SC;
+                obj.tau = tau;
+            end
         end
     end
 end

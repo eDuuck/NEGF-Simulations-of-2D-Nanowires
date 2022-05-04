@@ -38,7 +38,7 @@ classdef Sample < handle
             if nargin > 5
                 obj.arch = arch;
             else
-                obj.arch = 'square';
+                obj.arch = 'rectangular';
             end
             if nargin == 2
                 obj.units = w;
@@ -136,7 +136,11 @@ classdef Sample < handle
         
         function addContact(obj, M, tau)
             obj.nbrOfContacts = obj.nbrOfContacts + 1;
-            
+            if isa(M,'Contact')
+                obj.contacts(obj.nbrOfContacts) = M;
+            else
+                obj.contacts(obj.nbrOfContacts) = Contact(M,tau);
+            end
         end
     end
 end

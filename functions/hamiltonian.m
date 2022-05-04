@@ -9,22 +9,29 @@ if lower(sample.arch) == "honeycomb"
         H = eye(N)*sample.eps;
     end
 elseif lower(sample.arch) == "rectangular"
-    width = sample.width;
-    length = sample.length;
-    t = sample.conn;
+    y = sample.width;
+    x = sample.length;
+    t = sample.t;
+    H_elements_max = (y+length(t)*(2*y-length(t)-1))*x + ... %Main column elements.
+                    y*length(t)*(2*x-length(t)-1);
     
-    alpha = @(i) diag(ones(width,1)).*diag(sample.units(:,i)) + ...
-    t*(diag(ones(width-1,1),1) + diag(ones(width-1,1),-1));
+    H = spalloc(sample.M, sample.M,H_elements_max);
+    for j = 1:x
+        H(((y*(j-1))+1):(y*j),((y*(j-1))+1):(y*j)) = ...
+                       column(y,sample.units(:,j),t); %Fills column blocks.
+    end
+   
     
-    beta = diag(ones(width,1))*t;
-    
-    H = sparse(sample.M, sample.M);
-	H(1:width,1:width) = alpha(1);
-    for j = 1:length-1
-        H(((width*j)+1):(width*(j+1)),((width*j)+1):(width*(j+1))) = alpha(j+1);
-        H(((width*j)+1):(width*(j+1)),((width*(j-1))+1):(width*j)) = beta;
-        H(((width*(j-1))+1):(width*(j)),((width*j)+1):(width*(j+1))) = beta;
+    for j = 1:length(t)
+        H = H + sparse(t(j)*(diag(ones((x-j)*y,1),y*j)+diag(ones((x-j)*y,1),-y*j)));
     end
 end
+end
+
+function A = column(y,eps,t)
+    A = diag(eps);
+    for j = 1:length(t)
+        A = A + t(j)*(diag(ones(y-j,1),j) + diag(ones(y-j,1),-j));
+    end
 end
 
