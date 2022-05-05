@@ -35,7 +35,7 @@ classdef Sample < handle
                 obj.units = ones(w,l)*eps;
                 obj.uniform = true;
             end
-            if nargin > 5
+            if nargin > 4
                 obj.arch = arch;
             else
                 obj.arch = 'rectangular';

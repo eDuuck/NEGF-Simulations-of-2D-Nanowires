@@ -8,30 +8,22 @@ classdef Contact
         beta {mustBeNumeric}
         alpha {mustBeNumeric}
         eta {mustBeNumeric}
-        con_size
+        length
     end
     
     methods
-        function obj = Contact(SC,tau,con_size)
+        function obj = Contact(SC,tau,length)
             %CONTACT Construct an instance of this class
             %
             if nargin == 1
                 obj.SC = SC;
-            elseif nargin > 1
+            elseif nargin < 1
                 obj.SC = SC;
                 obj.tau = tau;
                 M = numel(SC);
-                t_l = length(tau);
-                temp = Sample(M,t_l,SC(1),tau);
+                temp = Sample(M,length(tau),avg(SC),tau);
                 obj.alpha = hamiltonian(temp);
-                obj.beta = zeros(t_l*M);
-                for j = 1:t_l
-                    obj.beta = obj.beta + ...
-                        diag(ones(M*(t_l-j+1),1),M*(j-1))*tau(t_l-j+1);
-                end
-                obj.beta = sparse(obj.beta);
-                obj.con_size = con_size;
-                obj.eta = min(abs(tau),[],'all')*1e-3;
+                obj.beta = tau(end)
             end
         end
     end

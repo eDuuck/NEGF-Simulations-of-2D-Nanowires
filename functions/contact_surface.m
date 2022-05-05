@@ -14,7 +14,7 @@ end
 SGF = zeros(numel(contact.SC));
 alpha = contact.alpha;
 beta = contact.beta;
-
+I = eye(numel(contact.SC));
 
 for j = 1:iterations
     SGFnew = (E*I+1i*contact.eta*I-alpha-beta'*SGF*beta)^-1;
@@ -25,4 +25,7 @@ for j = 1:iterations
         break
     end
 end
+SGF = sparse(SGF);
+end
+
 
