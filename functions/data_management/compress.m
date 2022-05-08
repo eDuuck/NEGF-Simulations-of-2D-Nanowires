@@ -1,4 +1,4 @@
-function [N,method] = compress(M,method)
+function [N,method,result] = compress(M,method)
 %COMPRESS Summary of this function goes here
 %   Detailed explanation goes here
 if nargin < 2
@@ -44,6 +44,11 @@ if method{1} == 'block'
         else
             N = N2;
         end
+    end
+    result = true;
+    if sum(M~=0,'all')*2 < length(N)
+        N = sparse(M);
+        result = false;
     end
 end
     

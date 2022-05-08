@@ -10,7 +10,6 @@ classdef Sample < handle
         dim {mustBeNumeric}
         M {mustBeNumeric}
         units {mustBeNumeric}
-        D {mustBeNumeric}
         arch
         method
         compressed {mustBeNumericOrLogical}
@@ -59,7 +58,6 @@ classdef Sample < handle
             obj.compressed = false;
             obj.dim = [obj.width, obj.length];
             obj.nbrOfContacts = 0;
-            obj.contacts = {};
         end
         
         function status = compress(obj, doComp)
@@ -138,9 +136,9 @@ classdef Sample < handle
         function addContact(obj, M, tau)
             obj.nbrOfContacts = obj.nbrOfContacts + 1;
             if isa(M,'Contact')
-                obj.contacts{obj.nbrOfContacts} = M;
+                obj.contacts(obj.nbrOfContacts) = M;
             else
-                obj.contacts{obj.nbrOfContacts} = Contact(M,tau,Inf);
+                obj.contacts(obj.nbrOfContacts) = Contact(M,tau);
             end
         end
     end

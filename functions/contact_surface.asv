@@ -1,27 +1,34 @@
-function [SGF] = contact_surface(contact,E, rate, iterations, acc)
+function [SGF] = contact_surface(contact,E, rate, acc)
 %CONTACT_SURFACE Returns the surface greens function for a given contact.
 %   Detailed explanation goes here
-if nargin < 4
-    rate = acc;
-end
 if nargin < 3
-    rate = 0.75;
+    acc = mean(contact.SC)*1e-3;
 end
 if nargin < 2
     rate = 0.75;
 end
+
 SGF = zeros(numel(contact.SC));
 alpha = contact.alpha;
 beta = contact.beta;
+I = eye(numel(contact.SC));
 
+if contact.size == Inf
+    iterations = 1000;
+else
+    iterations = contact.size;
+end
 
 for j = 1:iterations
     SGFnew = (E*I+1i*contact.eta*I-alpha-beta'*SGF*beta)^-1;
     change = SGFnew - SGF;
     %max_change(j) = max(abs(change),[],'all');
-    gn = gn + rate(k)*change;
-    if max(abs(change)) < acc
+    SGF = SGF + rate(k)*change;
+    if max(abs(change)) < acc && contact.size == Inf
         break
     end
 end
+SGF = sparse(SGF);
+end
+
 

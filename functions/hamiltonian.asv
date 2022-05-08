@@ -1,10 +1,7 @@
-function [H] = hamiltonian(sample, B)
+function [H] = hamiltonian(sample)
 %HAMILTONIAN Returns the hamiltonian of a given sample.
 %   Returns the hamiltonian matrix for a sample, a magnetic field described
-%   by the matrix B can be applied to the sample. If the sample has a
-%   size of [M N] then B needs to be of size [M N 3] for the different
-%   coordinates of the vector field matching every point of the sample's
-%   units.
+%   by the matrix B can be applied over the sample. If 
 if lower(sample.arch) == "honeycomb"
     N = 2*(prod(sample.dim)+sum(sample.dim));
     H = zeros(N);

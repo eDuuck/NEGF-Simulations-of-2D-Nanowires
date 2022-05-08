@@ -8,11 +8,11 @@ classdef Contact
         beta {mustBeNumeric}
         alpha {mustBeNumeric}
         eta {mustBeNumeric}
-        con_size
+        size
     end
     
     methods
-        function obj = Contact(SC,tau,con_size)
+        function obj = Contact(SC,tau,size)
             %CONTACT Construct an instance of this class
             %
             if nargin == 1
@@ -30,7 +30,7 @@ classdef Contact
                         diag(ones(M*(t_l-j+1),1),M*(j-1))*tau(t_l-j+1);
                 end
                 obj.beta = sparse(obj.beta);
-                obj.con_size = con_size;
+                obj.size = size;
                 obj.eta = min(abs(tau),[],'all')*1e-3;
             end
         end
