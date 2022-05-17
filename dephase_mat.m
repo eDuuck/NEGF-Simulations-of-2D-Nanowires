@@ -17,7 +17,7 @@ EI = E*eye(size(H,1));
 
 sigSum = sum(Sigma,3);
 SigmaIn = zeros(size(Sigma));
-for k = 1:size(Fermi)
+for k = 1:length(Fermi)
     SigmaIn(:,:,k) = Fermi(k)*real(1i * (Sigma(:,:,k) - Sigma(:,:,k)'));
 end
 

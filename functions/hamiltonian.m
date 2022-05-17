@@ -16,13 +16,14 @@ elseif lower(sample.arch) == "rectangular"
     y = sample.width;
     x = sample.length;
     t = sample.t;
+    units = sample.getUnits();
     H_elements_max = (y+length(t)*(2*y-length(t)-1))*x + ... %Main column elements.
                     y*length(t)*(2*x-length(t)-1);
     
     H = spalloc(sample.M, sample.M,H_elements_max);
     for j = 1:x
         H(((y*(j-1))+1):(y*j),((y*(j-1))+1):(y*j)) = ...
-                       column(y,sample.units(:,j),t); %Fills column blocks.
+                       column(y,units(:,j),t); %Fills column blocks.
     end
    
     

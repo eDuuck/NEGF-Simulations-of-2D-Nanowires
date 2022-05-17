@@ -1,6 +1,13 @@
 classdef Sample < handle
-    %SAMPLE Summary of this class goes here
-    %   Detailed explanation goes here
+    %SAMPLE is a class handle that is used to describe a system that NEGF
+    %simulations are to be applied to.
+    %   Creating a sample class can be done by invoking 
+    %   SAMPLE(w,l,eps,t,arch). w will describe the width of the wire, l
+    %   describes the length, eps is the value of the basis function at a
+    %   given point and t describes the interaction between different
+    %   points. If t is a vector with multiple values, further neighbors
+    %   are also effected. This isn't completed however and needs to be
+    %   touched up upon to work correctly.
     
     properties
         width {mustBeNumeric}
@@ -60,6 +67,7 @@ classdef Sample < handle
             obj.dim = [obj.width, obj.length];
             obj.nbrOfContacts = 0;
             obj.contacts = {};
+            obj.D = 0;
         end
         
         function status = compress(obj, doComp)
@@ -135,12 +143,22 @@ classdef Sample < handle
             end
         end
         
-        function addContact(obj, M, tau)
+        function addContact(obj, M, tau, pos, con_mat, fermi_level)
             obj.nbrOfContacts = obj.nbrOfContacts + 1;
             if isa(M,'Contact')
                 obj.contacts{obj.nbrOfContacts} = M;
             else
-                obj.contacts{obj.nbrOfContacts} = Contact(M,tau,Inf);
+                %Creates a simple 2D contact to pos.
+                if nargin < 5
+                    obj.contacts{obj.nbrOfContacts} = Contact(M,tau,pos);
+                else
+                    obj.contacts{obj.nbrOfContacts} = Contact(M,tau,pos,Inf,con_mat);
+                end
+                if nargin < 6
+                    obj.contacts{obj.nbrOfContacts}.fermi = 1;
+                else
+                    obj.contacts{obj.nbrOfContacts}.fermi = fermi_level;
+                end
             end
         end
     end
