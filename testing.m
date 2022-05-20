@@ -59,14 +59,69 @@ Ec = 1;
 a = 1;
 t0 = 0.05/a^2;
 eps = Ec + 4*t0;
-t = -t0;
+t =-t0;
 
 sample = Sample(15,10,eps,t);
+% sample.append(ones(sample.width,2)*eps*1.1);
+% sample.append(ones(sample.width,5)*eps);
+% sample.append(ones(sample.width,2)*eps*1.1);
+% sample.append(ones(sample.width,5)*eps);
 sample.addContact(ones(sample.width,1)*eps,t,[1,1]);
 sample.addContact(ones(sample.width,1)*eps,t,[1,sample.length]);
 sample.contacts{end}.fermi = 0;
 
-res = NEGF(sample,1.1);
-electron_den = electron_density(res);
-figure(2);
-imagesc(electron_den)
+
+sample.D = 0;%eye(sample.M)*1e-4;
+sample.applyNoise(0,3);
+
+% res = NEGF(sample,1.1);
+% electron_den = NEGF_result_remap(res,'electrons');
+% fermi_levels = NEGF_result_remap(res,'fermi');
+% figure(2);
+% subplot(1,2,1)
+% imagesc(electron_den)
+% subplot(1,2,2)
+% imagesc(fermi_levels)
+
+sim_points = 50;
+results = struct('NEGF_results',{},'complete',zeros(1,sim_points));
+
+filename = 'testing.mat';
+if isfile(filename)
+    load(filename);
+else
+    results = struct('complete',zeros(1,sim_points));
+    results.NEGF_results = cell(1,sim_points);
+end
+E = linspace(1,1.4,sim_points);
+k = 0;
+disp("0/" + sim_points)
+for x = 1:sim_points
+    tic
+    if ~results.complete(x)
+       results.NEGF_results{x} = NEGF(sample,E(x));
+       results.complete(x) = 1;
+       k = k + toc;
+    end
+    disp(x+"/"+sim_points)
+   if k > 300 || x == sim_points
+       disp("Saving results...");
+       save(filename,'results');
+   end
+end
+
+%%
+T = zeros(1,sim_points);
+load('testing.mat')
+for x = 1:sim_points
+    gamma1 = real(1i*(results.NEGF_results{x}.sigma{1} - results.NEGF_results{x}.sigma{1}'));
+    gamma2 = real(1i*(results.NEGF_results{x}.sigma{2} - results.NEGF_results{x}.sigma{2}'));
+    T(x) = real(trace(gamma1*results.NEGF_results{x}.G*gamma2*results.NEGF_results{x}.G'));
+end
+for x = 1:sim_points
+    fermi_levels = NEGF_result_remap(results.NEGF_results{x},'fermi');
+    imagesc(fermi_levels,[0 1])
+    pause(0.1);
+end
+figure(2)
+plot(T,E)

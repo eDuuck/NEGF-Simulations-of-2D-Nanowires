@@ -52,7 +52,7 @@ if ~isequal(D,0)
     end
     Gn = G*sigInSum*G';
     sigma0In = D .* Gn;
-    for j = 1:rep_lim
+    for j = 1:it_lim
         Gn = G *(sigInSum + sigma0In) * G';
         Sigma0InNew = D .* Gn;
         change = Sigma0InNew - sigma0In;

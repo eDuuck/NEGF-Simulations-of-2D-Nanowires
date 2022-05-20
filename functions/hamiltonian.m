@@ -5,16 +5,23 @@ function [H] = hamiltonian(sample, B)
 %   size of [M N] then B needs to be of size [M N 3] for the different
 %   coordinates of the vector field matching every point of the sample's
 %   units.
-if lower(sample.arch) == "honeycomb"
-    N = 2*(prod(sample.dim)+sum(sample.dim));
-    H = zeros(N);
-    
-    if size(sample.eps) == 1
-        H = eye(N)*sample.eps;
-    end
-elseif lower(sample.arch) == "rectangular"
-    y = sample.width;
-    x = sample.length;
+
+y = sample.width;
+x = sample.length;
+if nargin < 2
+    B = 0;
+end
+if length(B) == 3
+    B_field = ones(y,x,3);
+    B_field(:,:,1) = ones(y,x) * B(1);
+    B_field(:,:,2) = ones(y,x) * B(2);
+    B_field(:,:,3) = ones(y,x) * B(3);
+else
+    B_field = B;
+end
+
+if lower(sample.arch) == "rectangular"
+
     t = sample.t;
     units = sample.getUnits();
     H_elements_max = (y+length(t)*(2*y-length(t)-1))*x + ... %Main column elements.

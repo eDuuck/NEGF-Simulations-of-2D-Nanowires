@@ -15,6 +15,7 @@ classdef Sample < handle
         epsilon {mustBeNumeric}
         t {mustBeNumeric}
         dim {mustBeNumeric}
+        a {mustBeNumeric}
         M {mustBeNumeric}
         units {mustBeNumeric}
         D {mustBeNumeric}
@@ -131,6 +132,21 @@ classdef Sample < handle
             end
             obj.M = obj.M + numel(M);
             obj.dim = [obj.width, obj.length];
+        end
+        
+        function applyNoise(obj, amp, corLength)
+            % Returns the matrix M that represents the sample in
+            %it's uncompressed form.
+            if obj.compressed
+                obj.units = decompress(obj.units, obj.method);
+                obj.compressed = false;
+            end
+            if length(corLength) < 2
+                noiseMat = rsgeng2D(max(obj.dim),max(obj.dim),amp,corLength);
+            else
+                noiseMat = rsgeng2D(max(obj.dim),max(obj.dim),amp,corLength(1),corLength(1));
+            end
+            obj.units = obj.units + noiseMat(1:obj.dim(1),1:obj.dim(2));
         end
         
         function M = getUnits(obj)
