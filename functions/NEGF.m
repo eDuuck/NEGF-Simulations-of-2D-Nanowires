@@ -1,6 +1,6 @@
 function [result] = NEGF(sample,E,B,errorMarg,rate,it_lim,reduce,G0)
 %NEGF Summary of this function goes here
-%   Detailed explanation goes here
+%   NEGF(sample,E,B,errorMarg,rate,it_lim,reduce,G0)
 
 if nargin < 7
     reduce = false;
@@ -46,6 +46,8 @@ if ~isequal(D,0)
         Sigma0New = D .* G;
         change = Sigma0New - sigma0;
         if max(abs(change), [], 'all') < errorMarg
+            
+            %disp("sigma0 in " + j)
             break;
         end
         sigma0 = sigma0 + rate*change;
@@ -57,6 +59,7 @@ if ~isequal(D,0)
         Sigma0InNew = D .* Gn;
         change = Sigma0InNew - sigma0In;
         if max(abs(change), [], 'all') < errorMarg
+            %disp("sigma0in in " + j)
             break;
         end
         sigma0In = sigma0In + rate*change;
