@@ -144,7 +144,7 @@ classdef Sample < handle
             if length(corLength) < 2
                 noiseMat = rsgeng2D(max(obj.dim),max(obj.dim),amp,corLength);
             else
-                noiseMat = rsgeng2D(max(obj.dim),max(obj.dim),amp,corLength(1),corLength(1));
+                noiseMat = rsgeng2D(max(obj.dim),max(obj.dim),amp,corLength(1),corLength(2));
             end
             obj.units = obj.units + noiseMat(1:obj.dim(1),1:obj.dim(2));
         end

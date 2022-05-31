@@ -79,13 +79,13 @@ function [N,result] = QOI_compression(M,method)
                     old_values = uint64(zeros(2^(6),1)); %Just stupid.
             end
         end
-        temp = uint8(zeros(1,ceil(2.5*numel(M.matrix)))); %If length(temp) > length(M), compression has failed.
+        temp = uint8(zeros(1,2*numel(M.matrix))); %If length(temp) > length(M), compression has failed.
         A = double(reshape(M.matrix,1,[]));
 
         index_position = @(x) mod(3*real(double(x))+5*imag(double(x)),64)+1;
         
 
-        temp(1) = bitshift(0b10, 6);      %First cell value is always a new value.
+        temp(1) = 0xFF;      %First cell value is always a new value.
         temp(2) = real(A(1));
         temp(3) = imag(A(1));
         old_values(index_position(A(1))) = A(1);
@@ -118,44 +118,43 @@ function [N,result] = QOI_compression(M,method)
 
             elseif QOI_diff_range(A(curIndex),A(curIndex-1)) %Small change from previous value.
                 temp(tempIndex) = bitshift(0b01, 6) + QOI_diff_str(A(curIndex),A(curIndex-1));
-                old_values(index_position(A(curIndex))) = A(curIndex);
                 curIndex = curIndex + 1;
                 tempIndex = tempIndex + 1;
+                old_values(index_position(A(curIndex))) = A(curIndex);
             else
-                blockStart = curIndex;
+                blockStart
                 runlength = 1;
                 while runlength < 64
                     curIndex = curIndex+1;
                     if curIndex > length(A) %Algorithm has reached end of data.
                         break
                     end
-                    if ~(A(curIndex) == A(curIndex-1) || ...
+                    if A(curIndex) == A(curIndex-1) || ...
                        A(curIndex) == old_values(index_position(A(curIndex))) || ...
-                       QOI_diff_range(A(curIndex),A(curIndex-1)))
+                       QOI_diff_range(A(curIndex),A(curIndex-1))
 
                         runlength = runlength + 1;
-                        old_values(index_position(A(curIndex))) = A(curIndex);
                     else
                         break;
                     end
                 end
                 temp(tempIndex) = bitshift(0b10, 6) + runlength-1;
                 tempIndex = tempIndex + 1;
-                for i = 0:runlength-1
-                    temp(tempIndex) = real(A(blockStart + i));
-                    tempIndex = tempIndex + 1;
-                    temp(tempIndex) = imag(A(blockStart + i));
-                    tempIndex = tempIndex + 1;
+                for i = 1:runlength
+                    temp
                 end
+                tempIndex = tempIndex + 1;
+
+                temp(tempIndex) = 0xFF;
+                temp(tempIndex+1) = real(A(curIndex));
+                temp(tempIndex+2) = imag(A(curIndex));
+                old_values(index_position(A(curIndex))) = A(curIndex);
+                tempIndex = tempIndex + 3;
             end
         end
         
         N = struct('height',height,'width',width,...
-            'range',M.range','byteSize',M.byteSize,'comp_data',uint8(temp(1:tempIndex-1)));
-        result = true;
-        if tempIndex-1 > length(A)
-            result = false;
-        end
+            'range',M.range','byteSize',M.byteSize,'comp_data',uint8(temp(tempIndex-1)));
 end
 
 function bool = QOI_diff_range(A,B,byteSize)
