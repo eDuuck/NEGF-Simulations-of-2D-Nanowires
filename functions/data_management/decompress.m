@@ -17,5 +17,33 @@ switch method{1}
                 i = i+1;
             end
         end
+    case 'QOI'
+        data = N.comp_data;
+        index_position = @(x) mod(3*real(double(x))+5*imag(double(x)),64)+1;
+        old_values = uint8(zeros(2^(6),1));
+        A = uint8(zeros(N.width*N.length));
+
+        index = 1;
+        Aindex = 1;
+        while index <= length(data)
+            header = data(index);
+            switch bitshift(header,-6)
+                case 0b10 %New values
+                    index = index + 1;
+                    for j = 1:bitand(header,0x3F)
+                        A(Aindex) = data(index);
+                        index = index + 1;
+                        A(Aindex) = A(Aindex) + data(index)*1i;
+                        old_values(index_position(A(Aindex))) = A(Aindex);
+                        index = index + 1;
+                        Aindex = Aindex + 1;
+                    end
+                case 0b11
+
+                case 0b01
+
+                case 0b00
+            end
+        end
 end
 

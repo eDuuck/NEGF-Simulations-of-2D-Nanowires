@@ -274,7 +274,24 @@ z = zeros(1,sim_points);
 comparison = struct('original', z,'linear_discretiziation',z,'QOI',z);
 
 
+%% Fourier compression
+x = 10;
+G = results.NEGF_results{x}.G(1:15,1:15);
+fG = fft2(G);
+rfG = fG .* (abs(fG) > 0.05*max(abs(fG),[],"all"));
+drfG = lin_discretize(rfG);
+subplot(2,2,1)
+imagesc(abs(G))
+subplot(2,2,2)
+imagesc(abs(fG))
+subplot(2,2,3)
+imagesc(abs(rfG))
+subplot(2,2,4)
+imagesc(abs(double(drfG.matrix)))
+A = compress(rfG,'QOI');
+whos('drfG','A')
 
+%%
 for k = 1:50
 res = results.NEGF_results{k};
 diffMat = blockDifference(res,'vertical');
@@ -289,7 +306,11 @@ whos('G','diffMat','discMat','compMat','compMatOrig')
 pause(1);
 end
 
+
+
+
 function  [diff, bestIndex] = blockDifference(result,angle)
+%This method does not seem to save any siginificant amount of data.
 G = result.G;
 sample = result.sample;
 blockSide = sample.width;

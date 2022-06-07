@@ -73,7 +73,7 @@ end
 if reduce
     %DoReduceStuff
 end
-result.G = G * 1;
+result.G = full(G);
 result.Gn = Gn;
 result.sigma = sigma;
 result.sigmaIn = sigmaIn;
