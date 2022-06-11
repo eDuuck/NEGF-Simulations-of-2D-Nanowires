@@ -239,22 +239,22 @@ eps = Ec + 4*t0;
 t =-t0;
 
 sample = Sample(15,10,eps,t);
+sample.append(ones(sample.width,2)*eps*1.1);
+sample.append(ones(sample.width,5)*eps);
 %sample.append(ones(sample.width,2)*eps*1.1);
 %sample.append(ones(sample.width,5)*eps);
-% sample.append(ones(sample.width,2)*eps*1.1);
-% sample.append(ones(sample.width,5)*eps);
 sample.addContact(ones(sample.width,1)*eps,t,[1,1]);
 sample.addContact(ones(sample.width,1)*eps,t,[1,sample.length]);
 sample.contacts{end}.fermi = 0;
 
-%sample.D = eye(sample.M)*1e-4;
+sample.D = eye(sample.M)*1e-4;
 sample.applyNoise(0.01,3);
 
 sim_points = 50;
 results = struct('complete',zeros(1,sim_points));
 results.NEGF_results = cell(1,sim_points);
 
-E = linspace(1,1.37,sim_points);
+E = linspace(1,1.5,sim_points);
 B = 0;
 
 disp("0/" + sim_points)
@@ -265,7 +265,7 @@ for x = 1:sim_points
 %         if x > 1
 %             G0 = results.NEGF_results{x-1}.G;
 %         end
-        results.NEGF_results{x} = NEGF(sample,E(x),B,1e-6,0.8,1000,false,G0);
+        results.NEGF_results{x} = NEGF(sample,E(x),B,1e-6,0.8,100,false,G0);
         results.complete(x) = 1;
         disp(x + " / " + sim_points)
     end
@@ -292,20 +292,35 @@ A = compress(rfG,'QOI');
 whos('drfG','A')
 
 %%
-for k = 1:50
-res = results.NEGF_results{k};
-diffMat = blockDifference(res,'vertical');
-subplot(1,2,1)
-imagesc(abs(res.G))
-subplot(1,2,2)
+t = zeros(1,50);
+for k = 40:50
+G = results.NEGF_results{k}.G;
+diffMat = blockDifference(results.NEGF_results{k},'diagonal');
+subplot(1,3,1)
+imagesc(abs(G))
+subplot(1,3,2)
 imagesc(abs(diffMat))
-discMat = lin_discretize(diffMat);
-compMat = compress(diffMat,'QOI');
-compMatOrig = compress(res.G,'QOI');
+subplot(1,3,3)
+imagesc(abs(contin_mat(lin_discretize(G-G.'))))
+tic
+discMat = lin_discretize(G);
+p(k) = toc; tic;
+%compMat = compress(diffMat,'QOI');
+compMatOrig = compress(G,'QOI');
+Q(k) = toc;
 whos('G','diffMat','discMat','compMat','compMatOrig')
-pause(1);
+t(k) = sum(abs(G-G.'),'all');
+pause(10);
 end
+subplot(1,3,1)
+plot(t)
+subplot(1,3,2)
+plot(Q)
+subplot(1,3,3)
+plot(p)
 
+
+%%
 
 
 
