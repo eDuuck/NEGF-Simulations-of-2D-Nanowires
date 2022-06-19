@@ -18,7 +18,7 @@ if nargin < 3
     B = 0;
 end
 
-result = NEGF_result(sample,E);
+result = NEGF_result(sample,E,B);
 H = hamiltonian(sample,B);
 
 [sigma,sigmaIn] = sigma_from_sample(sample,E);
@@ -80,4 +80,5 @@ result.sigmaIn = sigmaIn;
 result.sigma0 = sigma0;
 result.sigma0In = sigma0In;
 result.reduced = reduce;
+result.B = B;
 end
