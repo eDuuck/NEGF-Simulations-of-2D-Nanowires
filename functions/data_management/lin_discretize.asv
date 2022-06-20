@@ -10,14 +10,9 @@ range = [realVal;imagVal];
 if ~exist('byteSize','var')
     byteSize = 1;
 end
-if isequal(imagVal,[0 0])
-    transFormMat = (real(A)-realVal(1))*2^(8*byteSize) /diff(realVal);
-elseif isequal(realVal,[0 0])
-    transFormMat = (imag(A)-imagVal(1))*2^(8*byteSize)*1i/diff(imagVal);
-else
-    transFormMat = (real(A)-realVal(1))*2^(8*byteSize) /diff(realVal) + ...
+if imagVal == [0 0]
+transFormMat = (real(A)-realVal(1))*2^(8*byteSize) /diff(realVal) + ...
                   (imag(A)-imagVal(1))*2^(8*byteSize)*1i/diff(imagVal);
-end
 
 switch byteSize
     case 1

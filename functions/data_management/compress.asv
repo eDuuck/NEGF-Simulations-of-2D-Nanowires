@@ -82,30 +82,32 @@ function [N,result] = QOI_compression(M,method)
 templength = ceil(2.5*numel(M));    %Needs to use non-linear discretization if fft is to be used.
 if length(method) == 1
     M = lin_discretize(M);
-    temp = uint8(zeros(1,templength));
-    old_values = uint8(zeros(2^(6),1));
+    temp = zeros(1,templength,'uint8');
+    old_values = zeros(2^(6),1,'uint8');
     shiftLen = 6;
+    byteSize = 1;
 else
     M = lin_discretize(M,method{2});
-    switch(method{2})
+    byteSize = method{2};
+    switch(byteSize)
         case 1
-            old_values = uint8(zeros(2^(6),1)); %Standard case
-            temp = uint8(zeros(1,templength));
+            old_values = zeros(2^(6),1,'uint8'); %Standard case
+            temp = zeros(1,templength,'uint8');
         case 2
-            old_values = uint16(zeros(2^(6),1)); %Extra accurate
-            temp = uint16(zeros(1,templength));
+            old_values = zeros(2^(6),1,'uint16'); %Extra accurate
+            temp = zeros(1,templength,'uint8');
         case 4
-            old_values = uint32(zeros(2^(6),1)); %Special case accuracy
-            temp = uint32(zeros(1,templength));
+            old_values = zeros(2^(6),1,'uint32'); %Special case accuracy
+            temp = zeros(1,templength,'uint32');
         case 8
-            old_values = uint64(zeros(2^(6),1)); %Just stupid.
-            temp = uint64(zeros(1,templength));
+            old_values = zeros(2^(6),1,'uint64'); %Just stupid.
+            temp = zeros(1,templength,'uint64');
     end
     shiftLen = method{2}*8 - 2;
 end
-A = double(reshape(M.matrix,1,[]));
+A = single(reshape(M.matrix,1,[]));
 
-index_position = @(x) mod(3*real(double(x))+5*imag(double(x)),64)+1;
+index_position = @(x) mod(3*real(x)+5*imag(x),64)+1;
 
 
 temp(1) = bitshift(0b10, 6);      %First cell value is always a new value.
@@ -137,12 +139,12 @@ while curIndex <= length(A)
         tempIndex = tempIndex + 1;
 
     elseif A(curIndex) == old_values(index_position(A(curIndex))) %Value has been seen earlier.
-        temp(tempIndex) = bitshift(0b00, shiftLen) + index_position(A(curIndex))-1;
+        temp(tempIndex) = index_position(A(curIndex))-1; %No bitshift needed as bitshift(0b00, shiftLen) = 0;
         curIndex = curIndex + 1;
         tempIndex = tempIndex + 1;
 
-    elseif QOI_diff_range(A(curIndex),A(curIndex-1)) %Small change from previous value.
-        temp(tempIndex) = bitshift(0b01, shiftLen) + QOI_diff_str(A(curIndex),A(curIndex-1));
+    elseif QOI_diff_range(A(curIndex),A(curIndex-1),byteSize) %Small change from previous value.
+        temp(tempIndex) = bitshift(0b01, shiftLen) + QOI_diff_str(A(curIndex),A(curIndex-1),byteSize);
         old_values(index_position(A(curIndex))) = A(curIndex);
         curIndex = curIndex + 1;
         tempIndex = tempIndex + 1;
@@ -157,7 +159,7 @@ while curIndex <= length(A)
                 break
             elseif ~(A(curIndex) == A(curIndex-1) || ...
                     A(curIndex) == old_values(index_position(A(curIndex))) || ...
-                    QOI_diff_range(A(curIndex),A(curIndex-1)))
+                    QOI_diff_range(A(curIndex),A(curIndex-1),byteSize))
 
                 runlength = runlength + 1;
                 old_values(index_position(A(curIndex))) = A(curIndex);
@@ -188,22 +190,16 @@ end
 end
 
 function bool = QOI_diff_range(A,B,byteSize)
-if ~exist('byteSize','var')
-    byteSize = 1;
-end
-switch byteSize
-    case 1
-        bool = 0 <= mod(imag(A-B)+4,255) & mod(imag(A-B)+4,255) <= 7 & ...
-            0 <= mod(real(A-B)+4,255) & mod(real(A-B)+4,255) <= 7;
-end
+modRange = bitshift(1,8);
+realDiff = mod(real(A)-real(B)+4,modRange);
+imagDiff = mod(imag(A)-imag(B)+4,modRange);
+
+bool = imagDiff < byteSize && realDiff < byteSize;
 end
 
 function str = QOI_diff_str(A,B,byteSize)
-if ~exist('byteSize','var')
-    byteSize = 1;
-end
-switch byteSize
-    case 1
-        str = bitshift(mod(real(A-B)+4,256),3) + mod(imag(A-B)+4,256);
-end
+diff = uint8(A-B);
+modRange = bitshift(1,8*byteSize);
+
+str = bitshift(mod(real(diff)+4,modRange),3) + mod(imag(diff)+4,modRange);
 end
