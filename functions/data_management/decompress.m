@@ -38,10 +38,10 @@ end
 end
 
 function M = QOI_decompress(N,debugstuff)
-        data = N.comp_data;
-        index_position = @(x) mod(3*real(double(x))+5*imag(double(x)),64)+1;
-        old_values = uint8(zeros(2^(6),1));
-        A = uint8(zeros(N.width*N.heigth,1));
+        data = double(N.comp_data);
+        index_position = @(x) mod(3*real(x)+5*imag(x),64)+1;
+        old_values = zeros(2^(6),1);
+        A = zeros(N.width*N.heigth,1);
         index = 1;
         Aindex = 1;
         while index <= length(data)
@@ -51,33 +51,37 @@ function M = QOI_decompress(N,debugstuff)
 
             header = data(index);
             index = index + 1;
-            switch bitshift(header,-6)
-                case 0b10 %New values
-                    runlength = bitand(header,0x3F);
+            payLoad = mod(header,2^6);
+            switch floor(header/2^6)
+                case 2 %0b10 New values
+                    runlength = payLoad;
                     for j = 0:runlength
                         if index+1 > length(data)
                             break
                         end
-                        A(Aindex) = double(data(index)) + double(data(index+1))*1i;
-                        old_values(index_position(A(Aindex))) = A(Aindex);
+                        curData = complex(data(index),data(index+1));
+                        A(Aindex) = curData;
+                        indPos = mod(3*real(curData)+5*imag(curData),64)+1;
+                        old_values(indPos) = curData;
                         index = index + 2;
                         Aindex = Aindex + 1;
                     end
-                case 0b11   %Repeating values
+                case 3  %0b11 Repeating values
                     repVal = A(Aindex - 1);
-                    replength = double(bitand(header,0x3F))+1;
-                    A(Aindex:(Aindex+replength-1)) = repVal;
-                    Aindex = Aindex + replength;
-                case 0b01   %Close value
-                    lastVal = double(A(Aindex - 1));
+                    replength = payLoad;
+                    A(Aindex:(Aindex+replength)) = repVal;
+                    Aindex = Aindex + replength+1;
+                case 1  %0b01 Close value
+                    lastVal = A(Aindex - 1);
                     A(Aindex) = mod(real(lastVal) +...
-                        double(bitshift(bitand(header,0b111000),-3)) - 4,256);
-                    A(Aindex) = double(A(Aindex)) + 1i * mod(imag(lastVal) +...
-                         double(bitand(header,0b111)) - 4,256);
-                    old_values(index_position(A(Aindex))) = A(Aindex);
+                        floor(payLoad/2^3) - 4,256);
+                    A(Aindex) = A(Aindex) + 1i * mod(imag(lastVal) +...
+                         mod(header,2^3) - 4,256);
+                    indPos = mod(3*real(A(Aindex))+5*imag(A(Aindex)),64)+1;
+                    old_values(indPos) = A(Aindex);
                     Aindex = Aindex + 1;
-                case 0b00   %Old value
-                    A(Aindex) = old_values(bitand(header,0x3F)+1);
+                case 0   %Old value
+                    A(Aindex) = old_values(payLoad+1);
                     Aindex = Aindex + 1;
             end 
         end

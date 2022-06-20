@@ -19,7 +19,7 @@ if nargin < 3
 end
 
 result = NEGF_result(sample,E,B);
-H = hamiltonian(sample,B);
+H = (hamiltonian(sample,B));
 
 [sigma,sigmaIn] = sigma_from_sample(sample,E);
 sigSum = sparse(sample.M,sample.M);
@@ -35,7 +35,7 @@ if nargin == 8
 else
     G = (EI - H - sigSum)^-1;
 end
-
+G = full(G);
 D = sample.D;
 if ~isequal(D,0)
     
@@ -73,7 +73,7 @@ end
 if reduce
     %DoReduceStuff
 end
-result.G = full(G);
+result.G = G;
 result.Gn = Gn;
 result.sigma = sigma;
 result.sigmaIn = sigmaIn;

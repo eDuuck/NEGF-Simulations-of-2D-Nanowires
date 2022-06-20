@@ -83,7 +83,7 @@ templength = ceil(2.5*numel(M));    %Needs to use non-linear discretization if f
 if length(method) == 1
     M = lin_discretize(M);
     temp = zeros(1,templength,'uint8');
-    old_values = zeros(2^(6),1,'uint8');
+    old_values = zeros(2^(6),1);
     shiftLen = 6;
     byteSize = 1;
 else
@@ -105,21 +105,32 @@ else
     end
     shiftLen = method{2}*8 - 2;
 end
-A = double(reshape(M.matrix,1,[]));
+modRange = 2^(byteSize*8);
 
-index_position = @(x) mod(3*real(x)+5*imag(x),64)+1;
+data = double(reshape(M.matrix,1,[]));
+%index_position = @(x) mod(3*real(x)+5*imag(x),64)+1; Turns out using a
+%handle is very slow.
 
 
 temp(1) = bitshift(0b10, 6);      %First cell value is always a new value.
-temp(2) = real(A(1));
-temp(3) = imag(A(1));
-old_values(index_position(A(1))) = A(1);
+temp(2) = real(data(1));
+temp(3) = imag(data(1));
+indPos = mod(3*real(data(1))+5*imag(data(1)),64)+1;
+old_values(indPos) = data(1);
 tempIndex = 4;
 curIndex = 2;
 
 
-while curIndex <= length(A)
-    if A(curIndex) == A(curIndex-1)   %Repeating values
+while curIndex <= length(data)
+    curData = data(curIndex);
+    indPos = mod(3*real(curData)+5*imag(curData),64)+1;
+    lastData = data(curIndex-1);
+    diff = curData - lastData;
+
+    dataDiff = mod(real(diff)+4,modRange) < 8 && ...
+               mod(imag(diff)+4,modRange) < 8;
+
+    if curData == lastData %Repeating values
         runlength = 1;
         compIndex = curIndex-1;
         while runlength < 64
@@ -127,9 +138,9 @@ while curIndex <= length(A)
             if curIndex == 114
                     debug
             end
-            if curIndex > length(A) %Algorithm has reached end of data.
+            if curIndex > length(data) %Algorithm has reached end of data.
                 break
-            elseif A(curIndex) == A(compIndex) %Still repeating pattern
+            elseif data(curIndex) == data(compIndex) %Still repeating pattern
                 runlength = runlength + 1;
             else
                 break;
@@ -138,31 +149,39 @@ while curIndex <= length(A)
         temp(tempIndex) = bitshift(0b11, shiftLen) + runlength-1;
         tempIndex = tempIndex + 1;
 
-    elseif A(curIndex) == old_values(index_position(A(curIndex))) %Value has been seen earlier.
-        temp(tempIndex) = index_position(A(curIndex))-1; %No bitshift needed as bitshift(0b00, shiftLen) = 0;
+    elseif curData == old_values(indPos) %Value has been seen earlier.
+        temp(tempIndex) = indPos-1; %No bitshift needed as bitshift(0b00, shiftLen) = 0;
         curIndex = curIndex + 1;
         tempIndex = tempIndex + 1;
 
-    elseif QOI_diff_range(A(curIndex),A(curIndex-1),byteSize) %Small change from previous value.
-        temp(tempIndex) = bitshift(0b01, shiftLen) + QOI_diff_str(A(curIndex),A(curIndex-1),byteSize);
-        old_values(index_position(A(curIndex))) = A(curIndex);
+    elseif dataDiff %Small change from previous value.
+        QOI_diff_str = mod(real(diff)+4,modRange)*2^3 + mod(imag(diff)+4,modRange);
+        temp(tempIndex) = bitshift(0b01, shiftLen) + QOI_diff_str;
+        old_values(indPos) = curData;
         curIndex = curIndex + 1;
         tempIndex = tempIndex + 1;
 
     else
         blockStart = curIndex;
         runlength = 1;
-        old_values(index_position(A(curIndex))) = A(curIndex);
+        old_values(indPos) = curData;
         while runlength < 64
+            lastData = data(curIndex);
             curIndex = curIndex+1;
-            if curIndex > length(A) %Algorithm has reached end of data.
+            if curIndex > length(data) %Algorithm has reached end of data.
                 break
-            elseif ~(A(curIndex) == A(curIndex-1) || ...
-                    A(curIndex) == old_values(index_position(A(curIndex))) || ...
-                    QOI_diff_range(A(curIndex),A(curIndex-1),byteSize))
+            end
+            curData = data(curIndex);
+            indPos = mod(3*real(curData)+5*imag(curData),64)+1;
+            dataDiff = mod(real(curData)-real(lastData)+4,modRange) < 8 && ...
+               mod(imag(curData)-imag(lastData)+4,modRange) < 8;
+
+            if curData ~= lastData && ...
+                    curData ~= old_values(indPos)&& ...
+                    ~dataDiff
 
                 runlength = runlength + 1;
-                old_values(index_position(A(curIndex))) = A(curIndex);
+                old_values(indPos) = curData;
             else
                 curIndex = curIndex-1; %Necessary spaghetti code.
                 break
@@ -172,9 +191,9 @@ while curIndex <= length(A)
         temp(tempIndex) = bitshift(0b10, shiftLen) + runlength-1;
         tempIndex = tempIndex + 1;
         for i = 0:runlength-1
-            temp(tempIndex) = real(A(blockStart + i));
+            temp(tempIndex) = real(data(blockStart + i));
             tempIndex = tempIndex + 1;
-            temp(tempIndex) = imag(A(blockStart + i));
+            temp(tempIndex) = imag(data(blockStart + i));
             tempIndex = tempIndex + 1;
         end
     end
@@ -184,22 +203,7 @@ N = struct('heigth',height,'width',width,...
     'range',range,'byteSize',M.byteSize,'comp_data',uint8(temp(1:tempIndex-1)));
 N.method = 'QOI';
 result = true;
-if tempIndex-1 > 2.5*length(A)
+if tempIndex-1 > 2.5*length(data)
     result = false;
 end
-end
-
-function bool = QOI_diff_range(A,B,byteSize)
-modRange = bitshift(1,8);
-realDiff = mod(real(A)-real(B)+4,modRange);
-imagDiff = mod(imag(A)-imag(B)+4,modRange);
-
-bool = imagDiff < byteSize && realDiff < byteSize;
-end
-
-function str = QOI_diff_str(A,B,byteSize)
-diff = uint8(A-B);
-modRange = bitshift(1,8*byteSize);
-
-str = bitshift(mod(real(diff)+4,modRange),3) + mod(imag(diff)+4,modRange);
 end

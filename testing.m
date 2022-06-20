@@ -1,22 +1,3 @@
-clear
-sa = Sample(10,20,1,linspace(-0.7,-0.01,3));
-sa.append(1.2*ones(3,20),'u');
-sa.compress();
-H = hamiltonian(sa,[0,1,1]);
-imagesc(imag(H));
-sa.addContact(1.2*ones(10,1),-0.05,[1,1]);
-con_mat = [eye(4),zeros(4,6);zeros(1,10);
-           0, 0, 0, 0, 0, 0, 1, 0, 0, 0];
-sa.addContact(1.2*ones(10,1),-0.05,[1,1],con_mat)
-con = sa.contacts{1};
-SGF = contact_surface(con,1.1,0.5);
-con = sa.contacts{2};
-SGF2 = contact_surface(con,1.1,0.5);
-subplot(1,2,1);
-imagesc(abs(SGF));
-subplot(1,2,2);
-imagesc(abs(SGF2));
-
 %%
 clear
 for E = 0.9:0.01:1.5
