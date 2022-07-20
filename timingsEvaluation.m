@@ -5,7 +5,7 @@ t0 = 0.05/a^2;
 eps = Ec + 4*t0;
 t =-t0;
 
-sample = Sample(15,40,eps,t);
+sample = Sample(15,10,eps,t);
 sample.append(ones(sample.width,2)*eps*1.1);
 sample.append(ones(sample.width,5)*eps);
 sample.append(ones(sample.width,2)*eps*1.1);
@@ -14,7 +14,7 @@ sample.addContact(ones(sample.width,1)*eps,t,[1,1]);
 sample.addContact(ones(sample.width,1)*eps,t,[1,sample.length]);
 sample.contacts{end}.fermi = 0;
 
-sample.D = eye(sample.M)*1e-4;
+sample.D = 1e-4;
 sample.applyNoise(0.01,3);
 
 E = 1.2;
@@ -31,3 +31,4 @@ subplot(1,3,2)
 imagesc(abs(NEGF_result.G));
 subplot(1,3,3)
 imagesc(abs(NEGF_result.G-orgG));
+disp(mean(abs(NEGF_result.G-orgG),"all"));

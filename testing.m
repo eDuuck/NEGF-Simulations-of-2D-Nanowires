@@ -338,6 +338,44 @@ end
 disp("elapsed decompression time : " +toc);
 getSize(results,2)
 
+
+%% Evaluating if 8bit is enough acc.
+clear
+Ec = 1;
+a = 1;
+t0 = 0.05/a^2;
+eps = Ec + 4*t0;
+t =-t0;
+
+sample = Sample(20,10,eps,t);
+%sample.append(ones(sajmple.width,2)*eps*1.1);
+%sample.append(ones(sample.width,5)*eps);
+%sample.append(ones(sample.width,2)*eps*1.1);
+%sample.append(ones(sample.width,5)*eps);
+sample.addContact(ones(sample.width,1)*eps,t,[1,1]);
+sample.addContact(ones(sample.width,1)*eps,t,[1,sample.length]);
+sample.contacts{end}.fermi = 0;
+
+%sample.D = eye(sample.M)*1e-4;
+%sample.applyNoise(0.01,3);
+
+
+E = 1.1;
+B = linspace(0,20,100);
+
+result = NEGF_map(sample,E,B);
+ %%
+V = zeros(1,50);
+for x = 1:50
+    res = result.NEGF_results{x};
+    fermi = NEGF_result_remap(res,'spectral_function');
+    imagesc(fermi);
+    pause(0.1)
+    V(x) = fermi(1,5)-fermi(end,5);
+
+end
+plot(V);
+
 function  [diff, bestIndex] = blockDifference(result,angle)
 %This method does not seem to save any siginificant amount of data.
 G = result.G;

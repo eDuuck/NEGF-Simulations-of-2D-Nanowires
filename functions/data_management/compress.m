@@ -81,7 +81,7 @@ function [N,result] = QOI_compression(M,method)
 [height,width] = size(M);
 templength = ceil(2.5*numel(M));    %Needs to use non-linear discretization if fft is to be used.
 if length(method) == 1
-    M = lin_discretize(M);
+    M = disc_mat(M,"linear");
     temp = zeros(1,templength,'uint8');
     old_values = zeros(2^(6),1);
     shiftLen = 6;
@@ -156,7 +156,7 @@ while curIndex <= length(data)
 
     elseif dataDiff %Small change from previous value.
         QOI_diff_str = mod(real(diff)+4,modRange)*2^3 + mod(imag(diff)+4,modRange);
-        temp(tempIndex) = bitshift(0b01, shiftLen) + QOI_diff_str;
+        temp(tempIndex) = 1*2^shiftLen + QOI_diff_str; %0b01
         old_values(indPos) = curData;
         curIndex = curIndex + 1;
         tempIndex = tempIndex + 1;
@@ -188,7 +188,7 @@ while curIndex <= length(data)
             end
         end
         curIndex = curIndex + 1;
-        temp(tempIndex) = bitshift(0b10, shiftLen) + runlength-1;
+        temp(tempIndex) = 2*2^shiftLen + runlength-1; %0b10
         tempIndex = tempIndex + 1;
         for i = 0:runlength-1
             temp(tempIndex) = real(data(blockStart + i));
@@ -202,6 +202,7 @@ range = M.range;
 N = struct('heigth',height,'width',width,...
     'range',range,'byteSize',M.byteSize,'comp_data',uint8(temp(1:tempIndex-1)));
 N.method = 'QOI';
+N.discMethod = M.method;
 result = true;
 if tempIndex-1 > 2.5*length(data)
     result = false;

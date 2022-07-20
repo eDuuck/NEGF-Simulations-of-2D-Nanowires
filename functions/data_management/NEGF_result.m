@@ -11,7 +11,7 @@ classdef NEGF_result < matlab.mixin.Copyable
         sigmaIn
         sigma0
         sigma0In
-        
+
         reduced {mustBeNumericOrLogical}
 
         E
@@ -46,6 +46,13 @@ classdef NEGF_result < matlab.mixin.Copyable
                     obj.sigma0In = decompress(obj.sigma0In,'qoi');
                     obj.reduced = false;
                 end
+            end
+        end
+        function Gn = getGn(obj)
+            if obj.reduced
+                Gn = decompress(obj.Gn,'qoi');
+            else
+                Gn = obj.Gn;
             end
         end
     end

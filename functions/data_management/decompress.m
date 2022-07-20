@@ -86,7 +86,7 @@ function M = QOI_decompress(N,debugstuff)
             end 
         end
         temp = struct("matrix",reshape(A,[N.heigth,N.width]), ...
-            "byteSize",1,"range",N.range);
+            "byteSize",1,"range",N.range,"method",N.discMethod);
         M = contin_mat(temp);
 end
 

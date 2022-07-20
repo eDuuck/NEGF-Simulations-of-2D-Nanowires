@@ -68,10 +68,7 @@ else
     G = (EI - H - sigSum)^-1;
     sigma0 = 0;
     sigma0In = 0;
-    Gn = G*sigInSum*G';
-end
-if reduce
-    %DoReduceStuff
+    Gn = G *(sigInSum + sigma0In) * G';
 end
 result.G = G;
 result.Gn = Gn;
@@ -81,4 +78,7 @@ result.sigma0 = sigma0;
 result.sigma0In = sigma0In;
 result.reduced = reduce;
 result.B = B;
+if reduce
+    results.reduce();
+end
 end

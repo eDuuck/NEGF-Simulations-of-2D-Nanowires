@@ -12,9 +12,11 @@ switch(data)
     case "electrons"
         data_values = real(diag(NEGF_result.Gn));
     case "fermi"
-        Gn = real(diag(NEGF_result.Gn));
+        Gn = real(diag(NEGF_result.getGn()));
         A = diag(real(1i*(NEGF_result.G - NEGF_result.G')));
         data_values = Gn ./A;
+    case "spectral_function"
+        data_values = diag(real(1i*(NEGF_result.G - NEGF_result.G')));
     otherwise 
         error("Not a supported sort of data to remap.");
 end
