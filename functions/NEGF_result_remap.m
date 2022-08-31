@@ -10,13 +10,14 @@ width = NEGF_result.sample.width;
 length = NEGF_result.sample.length;
 switch(data)
     case "electrons"
-        data_values = real(diag(NEGF_result.Gn));
+        data_values = real(diag(NEGF_result.getGn()));
     case "fermi"
-        Gn = real(diag(NEGF_result.getGn()));
-        A = diag(real(1i*(NEGF_result.G - NEGF_result.G')));
-        data_values = Gn ./A;
+        Gn = NEGF_result.getGn();
+        G = NEGF_result.getG();
+        A = 1i*(G - G');
+        data_values = real(diag(Gn ./A));
     case "spectral_function"
-        data_values = diag(real(1i*(NEGF_result.G - NEGF_result.G')));
+        data_values = diag(real(1i*(NEGF_result.getG() - NEGF_result.getG()')));
     otherwise 
         error("Not a supported sort of data to remap.");
 end

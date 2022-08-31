@@ -30,10 +30,8 @@ switch lower(method{1})
         M = QOI_decompress(N,debugstuff);
         
     case 'gomp'
-        A = QOI_decompress(N.QOI_result);
-        ftNu = triu1D(A,N.width);
-        ftN = ftNu + ftNu.' - diag(diag(ftNu));
-        M = ifft2(ftN);
+        A = triu1D(QOI_decompress(N.QOI_result),N.width);
+        M = A + A.' - diag(diag(A));
 end
 end
 

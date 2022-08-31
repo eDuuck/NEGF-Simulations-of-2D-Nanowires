@@ -384,7 +384,7 @@ for y = 1:length(result.B)
         res = result.NEGF_results{y,x};
         fermi = NEGF_result_remap(res,'fermi');
         
-        imagesc(fermi);
+        imagesc(real(diag(res.getGn()./res.getA())));
         pause(0.05)
         
         gamma1 = res.getGamma(1);

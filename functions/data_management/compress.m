@@ -13,15 +13,7 @@ switch(lower(method{1}))
     case 'qoi'
         [N,result] = QOI_compression(M,method);
     case 'gomp'
-        fM = fft2(M);
-        if length(method) > 2
-            redMargin = method{3};
-        else
-            redMargin = 0;
-        end
-        fM = fM .* (abs(fM) > (max(abs(fM),[],'all')*redMargin));
-        %fM = log(fM);
-        [QOI_comp,result] = QOI_compression(triu1D(fM),method);
+        [QOI_comp,result] = QOI_compression(triu1D(M),method);
         N = struct("method","Gomp","height", [], "width", [], "QOI_result",QOI_comp);
         N.method = 'Gomp';
         [N.height,N.width] = size(M);

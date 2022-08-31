@@ -28,7 +28,7 @@ classdef Sample < handle
     end
     
     methods
-        function obj = Sample(w,l,eps,t,arch)
+        function obj = Sample(w,l,eps,t,a,arch)
             %SAMPLE(w,l,eps,t,arch) Construct an instance of this class
             %   Creates a sample class which describes a sample with width
             %   w, length l, basis function value of eps and t. If t is a
@@ -45,10 +45,16 @@ classdef Sample < handle
                 obj.uniform = true;
             end
             if nargin > 4
+                obj.a = a;
+            else
+                obj.a = 10e-10;
+            end
+            if nargin > 5
                 obj.arch = arch;
             else
                 obj.arch = 'rectangular';
             end
+            
             if nargin == 2
                 obj.units = w;
                 obj.dim = size(w);
@@ -166,9 +172,14 @@ classdef Sample < handle
             else
                 %Creates a simple 2D contact to pos.
                 if nargin < 5
-                    obj.contacts{obj.nbrOfContacts} = Contact(M,tau,pos);
+                    obj.contacts{obj.nbrOfContacts} = Contact(M,tau,pos,obj.a);
                 else
-                    obj.contacts{obj.nbrOfContacts} = Contact(M,tau,pos,Inf,con_mat);
+                    obj.contacts{obj.nbrOfContacts} = Contact(M,tau,pos,obj.a,Inf,con_mat);
+                end
+                if pos(2) == 1
+                    obj.contacts{obj.nbrOfContacts}.face = 1;
+                else 
+                    obj.contacts{obj.nbrOfContacts}.face = -1;
                 end
                 if nargin < 6
                     obj.contacts{obj.nbrOfContacts}.fermi = 1;

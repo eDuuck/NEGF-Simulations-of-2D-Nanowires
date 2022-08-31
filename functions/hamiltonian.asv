@@ -20,11 +20,10 @@ if lower(sample.arch) == "rectangular"
     units = sample.getUnits();
     H = zeros(sample.M);
     if ~hasMagField
-%         H_elements_max = (wid+length(t)*(2*wid-length(t)-1))*len + ... %Main column elements.
-%             wid*length(t)*(2*len-length(t)-1);
-%         
-%         H = spalloc(sample.M, sample.M,H_elements_max);
-        H = zeros(sample.M);
+        H_elements_max = (wid+length(t)*(2*wid-length(t)-1))*len + ... %Main column elements.
+            wid*length(t)*(2*len-length(t)-1);
+        
+        H = spalloc(sample.M, sample.M,H_elements_max);
         for j = 1:len
             H(((wid*(j-1))+1):(wid*j),((wid*(j-1))+1):(wid*j)) = ...
                 column(wid,units(:,j),t); %Fills column blocks.
@@ -40,7 +39,7 @@ if lower(sample.arch) == "rectangular"
         if length(B) == 1           %Uniform magnetic field.
             B = ones(wid,len) * B;
         end
-        A = anti_curl(B,sample.a);
+        A = anti_curl(B,sample.a,1);
         for x = 1:len
             alpha = diag(units(:,x));
             for j = 1:length(t)

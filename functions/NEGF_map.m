@@ -33,8 +33,12 @@ disp(0 + "/" + length(B)*length(E));
 for i = 1:length(E)
     for j = 1:length(B)
         if ~output.completed(j,i)
+            r0 = 0;
+            if j ~= 1
+                r0 = output.NEGF_results{j-1,i};
+            end
             output.NEGF_results{j,i} = NEGF(sample,E(i),B(j),errorMarg,...
-                            rate,it_lim,reduce,0);
+                            rate,it_lim,reduce,r0);
             output.completed(j,i) = 1;
             if toc > saveTime
                 %saveData
