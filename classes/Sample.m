@@ -141,16 +141,17 @@ classdef Sample < handle
         end
         
         function applyNoise(obj, amp, corLength)
-            % Returns the matrix M that represents the sample in
-            %it's uncompressed form.
+            % 
+            %
             if obj.compressed
                 obj.units = decompress(obj.units, obj.method);
                 obj.compressed = false;
             end
+            relAmp = amp*max(abs(obj.getUnits),[],"all");
             if length(corLength) < 2
-                noiseMat = rsgeng2D(max(obj.dim),max(obj.dim),amp,corLength);
+                noiseMat = rsgeng2D(max(obj.dim),max(obj.dim),relAmp,corLength);
             else
-                noiseMat = rsgeng2D(max(obj.dim),max(obj.dim),amp,corLength(1),corLength(2));
+                noiseMat = rsgeng2D(max(obj.dim),max(obj.dim),relAmp,corLength(1),corLength(2));
             end
             obj.units = obj.units + noiseMat(1:obj.dim(1),1:obj.dim(2));
         end

@@ -12,7 +12,7 @@ if nargin < 5
     rate = 0.5;
 end
 if nargin < 4
-    errorMarg = 1e-6 * min(sample.getUnits,[],'all');
+    errorMarg = 1e-9 * min(sample.getUnits,[],'all');
 end
 if nargin < 3
     B = 0;
@@ -68,7 +68,7 @@ if ~isequal(D,0)
         sigma0In = sigma0In + rate*change;
     end
 else
-    G = (EI - H - sigSum)^-1;
+    %G = (EI - H - sigSum)^-1;
     sigma0 = 0;
     sigma0In = 0;
 end
@@ -81,7 +81,6 @@ result.sigma = sigma;
 result.sigmaIn = sigmaIn;
 result.sigma0 = sigma0;
 result.sigma0In = sigma0In;
-result.reduced = false;
 result.fermiLevels = fermiLevels;
 result.B = B;
 result.g0 = g0;

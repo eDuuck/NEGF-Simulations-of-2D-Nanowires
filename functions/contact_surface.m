@@ -59,6 +59,9 @@ for j = 1:iterations
         break
     end
 end
+if j == iterations
+    error("Did not converge in " + iterations + " iterations.")
+end
 g0 = SGF;
 if left
     SGF = beta'* SGF * beta;
