@@ -39,6 +39,9 @@ if ~isequal(D,0)
         end
         Sigma0 = Sigma0 + g*(Sigma0New - Sigma0);
     end
+    if j == rep_lim
+        disp("lmaoooo")
+    end
     Gn=G*sum(SigmaIn,3)*G';
     Sigma0In = D .* Gn;
     for j = 1:rep_lim

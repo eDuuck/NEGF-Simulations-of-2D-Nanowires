@@ -1,4 +1,4 @@
-classdef Sample < handle
+classdef Sample < matlab.mixin.Copyable
     %SAMPLE is a class handle that is used to describe a system that NEGF
     %simulations are to be applied to.
     %   Creating a sample class can be done by invoking 

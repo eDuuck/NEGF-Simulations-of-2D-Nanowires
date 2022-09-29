@@ -1,71 +1,83 @@
-function [result] = NEGF(sample,E,B,errorMarg,rate,it_lim,reduce,r0)
+function [result] = NEGF(NEGF_param)
 %NEGF Summary of this function goes here
 %   NEGF(sample,E,B,errorMarg,rate,it_lim,reduce,G0)
+E = NEGF_param.E;
+B = NEGF_param.B;
+sample = NEGF_param.sample;
 
-if nargin < 7
-    reduce = false;
-end
-if nargin < 6
-    it_lim = 100;
-end
-if nargin < 5
-    rate = 0.5;
-end
-if nargin < 4
-    errorMarg = 1e-9 * min(sample.getUnits,[],'all');
-end
-if nargin < 3
-    B = 0;
-end
-if nargin < 8
-    r0 = 0;
-end
+compress = NEGF_param.compress;
+
+it_lim = NEGF_param.it_lim;
+rate = NEGF_param.rate;
+errorMarg = NEGF_param.errorMarg;
+
 
 result = NEGF_result(sample,E,B);
 H = hamiltonian(sample,B);
 
-[sigma,sigmaIn,g0] = sigma_from_sample(sample,E,B,r0);
+%Not sure if scaling is needed.
+scaling = 1/(rms(E)+rms(B)+min(abs(sample.units),[],'all') + min(abs(sample.t)));
+%scaling = 1;
+
+[sigma,sigmaIn,s0] = sigma_from_sample(sample,E,B,NEGF_param.g0);
 sigSum = sparse(sample.M,sample.M);
 sigInSum = sparse(sample.M,sample.M);
 for j = 1:length(sigma)
     sigSum = sigSum + sigma{j};
     sigInSum = sigInSum -imag(sigmaIn{j} - sigmaIn{j}');
 end
+H = H*scaling; E = E*scaling; B = B*scaling; errorMarg = errorMarg * scaling;
+sigSum = sigSum * scaling; sigInSum = sigInSum * scaling;
+
 EI = eye(sample.M) * E;
 
-if r0 ~= 0
-    G = r0.getG();
-else
-    G = (EI - H - sigSum)^-1;
-end
-G = full(G);
-D = sample.D;
-if ~isequal(D,0)
+
+D = sample.D * scaling^2;
+if ~isequal(D,D*0)
+    if NEGF_param.g0 ~= 0
+        sigma0 = NEGF_param.g0.getSigma0() * scaling;
+    else
+        G = (EI - H - sigSum)^-1;
+        sigma0 = D .* G;
+    end
     
-    sigma0 = D .* G;
     
     for j = 1:it_lim
         G =(EI - H - sigSum - sigma0)^-1;
-        Sigma0New = D .* G;
-        change = Sigma0New - sigma0;
-        if max(abs(change), [], 'all') < errorMarg
-            
-            %disp("sigma0 in " + j)
+        sigma0New = D .* G;
+        change = sigma0New - sigma0;
+        c_val = sum(abs(change),"all")/sum(abs(sigma0New)+abs(sigma0),"all");
+        if c_val < errorMarg
             break;
         end
         sigma0 = sigma0 + rate*change;
     end
-    Gn = G*sigInSum*G';
-    sigma0In = D .* Gn;
+    if j == it_lim && NEGF_param.error_halt
+        error("Sigma0 did not converge in " + it_lim + ...
+            " iterations. Error margin = " + c_val);
+    end
+
+    if NEGF_param.g0 ~= 0
+        sigma0In = NEGF_param.g0.getSigma0In() * scaling;
+    else
+        Gn = G*sigInSum*G';
+        sigma0In = D .* Gn;
+    end
+
     for j = 1:it_lim
         Gn = G *(sigInSum + sigma0In) * G';
         Sigma0InNew = D .* Gn;
         change = Sigma0InNew - sigma0In;
-        if max(abs(change), [], 'all') < errorMarg
-            %disp("sigma0in in " + j)
+        c_val = sum(abs(change),"all")/sum(abs(Sigma0InNew)+abs(sigma0In),"all");
+        if c_val < errorMarg
             break;
         end
         sigma0In = sigma0In + rate*change;
+    end
+
+    if j == it_lim && NEGF_param.error_halt
+        error("Sigma0In did not converge in " + it_lim + ...
+            " iterations. Error margin = " + c_val);
     end
 else
     %G = (EI - H - sigSum)^-1;
@@ -76,15 +88,18 @@ fermiLevels = zeros(sample.nbrOfContacts,1);
 for j = 1:sample.nbrOfContacts
     fermiLevels(j) = sample.contacts{j}.fermi;
 end
-result.G = G;
+%result.G = G;  %This isn't needed since G is fast to calculate once sigma0
+%and surface green functions are extracted.
 result.sigma = sigma;
 result.sigmaIn = sigmaIn;
-result.sigma0 = sigma0;
-result.sigma0In = sigma0In;
+result.sigma0 = sigma0/scaling;
+result.sigma0In = sigma0In/scaling;
 result.fermiLevels = fermiLevels;
-result.B = B;
-result.g0 = g0;
-if reduce
-    result.reduce(true);
+result.s0 = s0;
+if compress
+    if B == 0 %When no magnetic fields are present, matrices are symmetric. (It seems)
+        result.compressionMethod = 'gomp'; 
+    end
+    result.compress(true);
 end
 end

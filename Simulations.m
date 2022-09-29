@@ -1,6 +1,6 @@
 M = 40;
 contacts = 2;
-animation = true;
+animation = false;
 %create_constants
 load('physical_constants.mat')
 m = electron_mass;
@@ -35,7 +35,7 @@ A = zeros(M,M,sim_points);
 T = zeros(1,sim_points);
 
 
-D = 100e-3*t^2*diag(ones(1,M));
+D = 100e-5*t^2*diag(ones(1,M));
 
 tic
 disp("Starting simulations, 0/" + sim_points)
@@ -89,3 +89,4 @@ else
     plot(E,real(2*pi*h_bar/(e_charge^2)*(2*(1-T)./T + 1))); 
     axis([min(E) max(E) 0 1E6]);
 end
+

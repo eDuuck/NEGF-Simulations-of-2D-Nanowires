@@ -1,50 +1,48 @@
-function output = NEGF_map(sample,E,B,result,saveTime,errorMarg,rate,it_lim,reduce)
-%MC_NEGF Summary of this function goes here
+function output = NEGF_map(NEGF_param)
+% NEGF_map(sample,E,B,compress,result,saveTime,errorMarg,rate,it_lim)
 %   Detailed explanation goes here
-if ~exist("errorMarg","var")
-    errorMarg = 1e-6 * min(sample.getUnits,[],'all');
-end
-if ~exist("rate","var")
-    rate = 0.5;
-end
-if ~exist("it_lim","var")
-    it_lim = 50;
-end
-if ~exist("reduce","var")
-    reduce = false;
-end
-if ~exist("saveTime","var")
-    saveTime = Inf;
-end
-newRes = true;
-if exist("result","var")
-    if isstruct(result)
-        output = result;
-        newRes = false;
-    end
-end
+save_time = NEGF_param.save_time;
+
+E = NEGF_param.E;
+B = NEGF_param.B;
+
+newRes = true;  %If an old simulation that was autosaved is available.
+if NEGF_param.result ~= 0
+    output = result;
+    newRes = false;
+end 
+
 if newRes
     output = struct("E",E,...
     "B",B,"completed", zeros(length(B),length(E)));
-    output.NEGF_results = cell(length(B),length(E));
+    output.NEGF_result = cell(length(B),length(E));
 end
-tic
-disp(0 + "/" + length(B)*length(E));
+
+tic %Used to monitor time for autosave.
+if NEGF_param.print
+    disp(0 + "/" + length(B)*length(E));
+end
 for i = 1:length(E)
     for j = 1:length(B)
         if ~output.completed(j,i)
-            r0 = 0;
+            params = copy(NEGF_param);
+            params.E = E(i); params.B = B(j);
+
             if j ~= 1
-                r0 = output.NEGF_results{j-1,i};
+                params.g0 = output.NEGF_result{j-1,i};
+            elseif i ~= 1 
+                params.g0 = output.NEGF_result{j,i-1};
             end
-            output.NEGF_results{j,i} = NEGF(sample,E(i),B(j),errorMarg,...
-                            rate,it_lim,reduce,r0);
+
+            output.NEGF_result{j,i} = NEGF(params);
             output.completed(j,i) = 1;
-            if toc > saveTime
+            if toc > save_time
                 %saveData
                 tic
             end
-            disp(length(B)*(i-1)+j + "/" + length(B)*length(E));
+            if NEGF_param.print
+                disp(length(B)*(i-1)+j + "/" + length(B)*length(E));
+            end
         end
     end
 end

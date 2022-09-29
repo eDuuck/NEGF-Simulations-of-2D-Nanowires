@@ -17,14 +17,14 @@ classdef NEGF_result < matlab.mixin.Copyable
     %   of at least 8x should be expected.
 
     properties
-        G
+        %G
         sigma
         sigmaIn
         sigma0
         sigma0In
         fermiLevels
 
-        g0
+        s0  %Guess for surface function.
 
         compressionMethod
 
@@ -45,10 +45,10 @@ classdef NEGF_result < matlab.mixin.Copyable
             obj.E = E;
             obj.B = B;
             obj.reduced = false;
-            obj.compressionMethod = 'gomp';
+            obj.compressionMethod = 'QOI';
         end
 
-        function reduce(obj,doReduce)
+        function compress(obj,doReduce)
             %REDUCE Lmao, you really reading this?
             %   Detailed explanation goes here
             if ~exist("doReduce", "var")
@@ -56,12 +56,12 @@ classdef NEGF_result < matlab.mixin.Copyable
             end
             if xor(doReduce, obj.reduced) %Only do comp if change is actually desired.
                 if doReduce
-                    obj.G = compress(obj.G, obj.compressionMethod);
+                    %obj.G = compress(obj.G, obj.compressionMethod);
                     obj.sigma0 = compress(obj.sigma0, obj.compressionMethod);
                     obj.sigma0In = compress(obj.sigma0In, obj.compressionMethod);
                     obj.reduced = true;
                 else
-                    obj.G = decompress(obj.G, obj.compressionMethod);
+                    %obj.G = decompress(obj.G, obj.compressionMethod);
                     obj.sigma0 = decompress(obj.sigma0, obj.compressionMethod);
                     obj.sigma0In = decompress(obj.sigma0In, obj.compressionMethod);
                     obj.reduced = false;
@@ -78,7 +78,7 @@ classdef NEGF_result < matlab.mixin.Copyable
             for j = 1:length(obj.sigma)
                 sigSum = sigSum + obj.sigma{j};
             end
-            sigSum = sigSum + obj.sigma0;
+            sigSum = sigSum + obj.getSigma0();
 
             G = (EI - H - sigSum)^-1;
 
@@ -116,6 +116,14 @@ classdef NEGF_result < matlab.mixin.Copyable
                 sigma0In = decompress(obj.sigma0In, obj.compressionMethod);
             else
                 sigma0In = obj.sigma0In;
+            end
+        end
+
+        function sigma0 = getSigma0(obj)
+            if obj.reduced
+                sigma0 = decompress(obj.sigma0, obj.compressionMethod);
+            else
+                sigma0 = obj.sigma0;
             end
         end
 

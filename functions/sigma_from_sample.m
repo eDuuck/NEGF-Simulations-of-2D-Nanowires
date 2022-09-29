@@ -14,7 +14,7 @@ for j = 1:sample.nbrOfContacts
     con_length = 1;
     y = contact.pos(1); x = contact.pos(2);
     if r0 ~= 0
-        g0 = r0.g0{j};
+        g0 = r0.s0{j};
     else
         g0 = 0;
     end
@@ -26,7 +26,7 @@ for j = 1:sample.nbrOfContacts
     sigma{j} = kron(Hpos,SGF);
 
 %     sigma{j} = spalloc(sample.M, sample.M,numel(SGF));
-%     for k = 1:con_length %This might be unnecessary convoluted. (Edit. it is.)
+%     for k = 1:con_length %This might be unnecessary convoluted. (Edit: It is.)
 %         sIndx = (x+k-2)*sample.width + y;
 %         eIndx = sIndx + con_width-1;
 %         sigma{j}(sIndx:eIndx,sIndx:eIndx) = SGF;

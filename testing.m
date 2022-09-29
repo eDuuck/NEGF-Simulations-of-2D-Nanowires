@@ -6,8 +6,8 @@ tau = -0.05;
 eta = 0.001;
 Ec = 1;
 eps = Ec - 4*tau;
-con = Contact(ones(10,1)*eps,tau,[1,1]);
-SGF = contact_surface(con,E,0.5);
+con = Contact(ones(10,1)*eps,tau,[1,1],1);
+SGF = contact_surface(con,E,0,0);
 %contact_testing
 figure(2)
 imagesc(abs(SGF));
@@ -360,15 +360,17 @@ sample.addContact(ones(sample.width,1)*eps,t,[1,sample.length]);
 sample.contacts{end}.fermi = 0;
 sample.contacts{end}.face = -1;
 
-sample.D = 0;%eye(sample.M)*1e-4;
-sample.applyNoise(0.1,3);
+%sample.D = eye(sample.M)*1e-6;
+%sample.applyNoise(0.1,3);
 
 
 E = t0;
 B = 0:0.1:50;%linspace(0,10,100);
+NEGF_param = NEGF_param(sample,E,B,true);
+NEGF_param.print = true;
 
 tic
-result = NEGF_map(sample,E,B,0,300,1e-6,0.5,50,false);
+result = NEGF_map(NEGF_param);
 toc
 disp(getSize(result,2))
  %%
