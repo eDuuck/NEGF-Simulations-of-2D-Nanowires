@@ -19,7 +19,7 @@ sample.contacts{end}.fermi = 0;
 
 E0 = Ec + 0 * t;
 E_end = Ec - 4 * t;
-sim_points = 500;
+sim_points = 100;
 
 E = linspace(E0,E_end,sim_points);
 B = 0;
@@ -51,16 +51,16 @@ legend(legends); title("1D wire with no barrier.")
 
 
 %----------------Adding double barrier to sample---------------------------
-sample.units(floor(sample.length/3)) = eps + 1*eV;
-sample.units(floor(2*sample.length/3)) = eps + 1*eV;
-D_vals = eV*eps*10.^[-inf,-3,-2];
+%sample.units(floor(sample.length/3)) = eps + 1*eV;
+sample.units(floor(2*sample.length/4)) = eps + 1*eV;
+D_vals = eV*eps*10.^[-inf,-3,-2,-1];
 
 figure(2);clf
 legends = cell(1,length(D_vals));
 subplot(1,2,1)
 hold on
 for j = 1:length(D_vals)
-    sample.D = D_vals(j) * diag(ones(1,sample.M));
+    sample.D = D_vals(j) * diag(ones(1,sample.M));  %Phase + momentum relaxation.
     legends{j} = "D = " + D_vals(j);
 
     params = NEGF_param(sample,E,B);
@@ -74,6 +74,7 @@ for j = 1:length(D_vals)
     plot(E/eV,T,'Color',[j/length(D_vals),0,1-j/length(D_vals)])
 end
 hold off
+axis([E(1)/eV, E(end)/eV, 0, 1]);
 xlabel("E [eV]"); ylabel("Transmission");
 legend(legends); title("1D wire with double barrier.")
 
@@ -81,7 +82,7 @@ legends = cell(1,length(D_vals));
 subplot(1,2,2)
 hold on
 for j = 1:length(D_vals)
-    sample.D = D_vals(j) * ones(sample.M);
+    sample.D = D_vals(j) *ones(sample.M);   %Only phase relaxation.
     legends{j} = "D = " + D_vals(j);
 
     params = NEGF_param(sample,E,B);
@@ -95,6 +96,7 @@ for j = 1:length(D_vals)
     plot(E/eV,T,'Color',[j/length(D_vals),0,1-j/length(D_vals)])
 end
 hold off
+axis([E(1)/eV, E(end)/eV, 0, 1]);
 xlabel("E [eV]"); ylabel("Transmission");
 legend(legends); title("1D wire with double barrier.")
 
