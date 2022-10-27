@@ -12,7 +12,7 @@ function [remapped_data] = NEGF_result_remap(NEGF_result, data)
     %   "data" be extracted from the NEGF_result. This is not case
     %   sensitive.
     %   The remapping currently supports the following quantities:
-    %       "electrons"     : Just remaps Gn.
+    %       "electrons"     : Just remaps Gn (divided by 2pi).
     %       "fermi"         : Extracts the fermilevels in the sample.
     %       "A"             : Remaps the spectral function which shows the
     %                       : density of states.
@@ -23,25 +23,29 @@ function [remapped_data] = NEGF_result_remap(NEGF_result, data)
     end
 
     remapped_data = zeros(size(NEGF_result.sample.units));
-    width = NEGF_result.sample.width;
-    length = NEGF_result.sample.length;
+    wid = NEGF_result.sample.width;
+    len = NEGF_result.sample.length;
     switch(lower(data))
         case "electrons"
-            data_values = real(diag(NEGF_result.getGn()));
+            data_values = real(diag(NEGF_result.getGn()))/(2*pi);
         case "fermi"
-            Gn = NEGF_result.getGn();
             G = NEGF_result.getG();
+            sigIn = NEGF_result.getSigmaIn();
+            sigInSum = zeros(size(G));
+            for j = 1:length(sigIn)
+                sigInSum = sigInSum + sigIn{j};
+            end
+            Gn = G *(sigInSum + NEGF_result.getSigma0In()) * G';
+
             A = 1i*(G - G');
             data_values = real(diag(Gn ./A));
         case "a"
-            data_values = diag(real(1i*(NEGF_result.getG() - NEGF_result.getG()')));
+            data_values = diag(real(1i*(NEGF_result.getG() - NEGF_result.getG()')))/(2*pi);
         otherwise
             error("Not a supported sort of data to remap.");
     end
 
-
-
-    for j = 1:length
-        remapped_data(:,j) = data_values(((j-1)*width+1):(j*width));
+    for j = 1:len
+        remapped_data(:,j) = data_values(((j-1)*wid+1):(j*wid));
     end
 

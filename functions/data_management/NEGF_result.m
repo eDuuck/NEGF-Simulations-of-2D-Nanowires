@@ -19,7 +19,7 @@ classdef NEGF_result < matlab.mixin.Copyable
     properties
         %G
         sigma
-        sigmaIn
+        %sigmaIn
         sigma0
         sigma0In
         fermiLevels
@@ -57,11 +57,19 @@ classdef NEGF_result < matlab.mixin.Copyable
             if xor(doReduce, obj.reduced) %Only do comp if change is actually desired.
                 if doReduce
                     %obj.G = compress(obj.G, obj.compressionMethod);
+                    for i = 1:length(obj.sigma)
+                        obj.sigma{i} = compress(obj.sigma{i}, obj.compressionMethod);
+                        obj.s0{i} = compress(obj.s0{i}, obj.compressionMethod);
+                    end
                     obj.sigma0 = compress(obj.sigma0, obj.compressionMethod);
                     obj.sigma0In = compress(obj.sigma0In, obj.compressionMethod);
                     obj.reduced = true;
                 else
                     %obj.G = decompress(obj.G, obj.compressionMethod);
+                    for i = 1:length(obj.sigma)
+                        obj.sigma{i} = decompress(obj.sigma{i}, obj.compressionMethod);
+                        obj.s0{i} = decompress(obj.s0{i}, obj.compressionMethod);
+                    end
                     obj.sigma0 = decompress(obj.sigma0, obj.compressionMethod);
                     obj.sigma0In = decompress(obj.sigma0In, obj.compressionMethod);
                     obj.reduced = false;
@@ -73,10 +81,10 @@ classdef NEGF_result < matlab.mixin.Copyable
         function G = getG(obj)
             EI = obj.E*eye(obj.sample.M);
             H = hamiltonian(obj.sample,obj.B);
-
-            sigSum = zeros(size(obj.sigma{1}));
-            for j = 1:length(obj.sigma)
-                sigSum = sigSum + obj.sigma{j};
+            sig = obj.getSigma();
+            sigSum = zeros(size(sig{1}));
+            for j = 1:length(sig)
+                sigSum = sigSum + sig{j};
             end
             sigSum = sigSum + obj.getSigma0();
 
@@ -89,19 +97,12 @@ classdef NEGF_result < matlab.mixin.Copyable
 %             end
         end
 
-
-        function sigmaIn = getSigmaIn(obj)
-            sigmaIn = obj.sigma;
-            for i = 1:obj.fermiLevels
-                sigmaIn{i} = sigmaIn{i}*obj.fermiLevels(i);
-            end
-        end
-
         function Gn = getGn(obj)
-            Gf = obj.getG();
+            Gf = obj.getG(); 
+            sigIn = obj.getSigmaIn();
             sigInSum = zeros(size(Gf));
-            for j = 1:length(obj.sigmaIn)
-                sigInSum = sigInSum + 1i*(obj.sigmaIn{j} - obj.sigmaIn{j}');
+            for j = 1:length(sigIn)
+                sigInSum = sigInSum + sigIn{j};
             end
             Gn = Gf *(sigInSum + obj.getSigma0In()) * Gf';
         end
@@ -109,6 +110,43 @@ classdef NEGF_result < matlab.mixin.Copyable
         function A = getA(obj)
             Gf = obj.getG();
             A = 1i*(Gf - Gf');
+        end
+
+        function sigma = getSigma(obj,contact)
+            if nargin < 2
+                sigma = cell(size(obj.sigma));
+                if obj.reduced
+                    for i = 1:length(obj.sigma)
+                        sigma{i} = decompress(obj.sigma{i},obj.compressionMethod);
+                    end
+                else
+                    for i = 1:length(obj.sigma)
+                        sigma{i} = obj.sigma{i};
+                    end
+                end
+            else
+                if obj.reduced
+                    for i = 1:length(obj.sigma)
+                        sigma = decompress(obj.sigma{contact},obj.compressionMethod);
+                    end
+                else
+                    for i = 1:length(obj.sigma)
+                        sigma = obj.sigma{contact};
+                    end
+                end
+            end
+        end
+
+        function sigmaIn = getSigmaIn(obj,contact)
+            if nargin < 2
+               sigmaIn = obj.getSigma();
+               for i = 1:length(obj.sigma)
+                    sigmaIn{i} = obj.fermiLevels(i)*1i*(sigmaIn{i}-sigmaIn{i}');
+               end
+            else
+                sig = obj.getSigma{contact};
+                sigmaIn = obj.fermiLevels(contact)*1i*(sig-sig');
+            end
         end
 
         function sigma0In = getSigma0In(obj)
@@ -129,15 +167,41 @@ classdef NEGF_result < matlab.mixin.Copyable
 
         function gamma = getGamma(obj, contact)
             if ~exist("contact","var")
-                sigSum = zeros(size(obj.sigma));
+                sig = obj.getSigma();
+                sigSum = zeros(size(sig));
                 for j = 1:length(obj.femiLevels)
-                    sigSum = sigSum + obj.sigma{j};
+                    sigSum = sigSum + sig{j};
                 end
                 gamma = 1i*(sigSum-sigSum');
                 return
             end
-            gamma = 1i*(obj.sigma{contact}-obj.sigma{contact}');
+            sig = obj.getSigma(contact);
+            gamma = 1i*(sig-sig');
         end
-
+        
+        function s0 = getS0(obj,contact)
+            if nargin < 2
+                s0 = cell(size(obj.s0));
+                if obj.reduced
+                    for i = 1:length(obj.s0)
+                        s0{i} = decompress(obj.s0{i},obj.compressionMethod);
+                    end
+                else
+                    for i = 1:length(obj.s0)
+                        s0{i} = obj.s0{i};
+                    end
+                end
+            else
+                if obj.reduced
+                    for i = 1:length(obj.s0)
+                        s0 = decompress(obj.s0{contact},obj.compressionMethod);
+                    end
+                else
+                    for i = 1:length(obj.s0)
+                        s0 = obj.s0{contact};
+                    end
+                end
+            end
+        end
     end
 end

@@ -11,6 +11,7 @@ classdef NEGF_param < matlab.mixin.Copyable
         print
         errorMarg
         it_lim
+        con_it_lim
         rate
         compress
         save_time 
@@ -35,15 +36,15 @@ classdef NEGF_param < matlab.mixin.Copyable
             else
                 obj.compress = compress;
             end
-            obj.errorMarg = 1e-4*min(abs(sample.t));
+            obj.errorMarg = 1e-5;   %Seems to be accurate enough in most testing.
             obj.rate = 0.9;
             obj.it_lim = 100;
-            obj.compress = false;
             obj.save_time = Inf;
             obj.print = false;
             obj.result = 0;
             obj.g0 = 0;     %This guess is an old NEGF_result that we expect to be similar. (Small E/B change)
             obj.error_halt = true;
+            obj.con_it_lim = 10000;
         end
 
     end

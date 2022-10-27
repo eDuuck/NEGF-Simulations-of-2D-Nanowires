@@ -18,7 +18,7 @@ if newRes
     output.NEGF_result = cell(length(B),length(E));
 end
 
-tic %Used to monitor time for autosave.
+saveTimer = tic; %Used to monitor time for autosave.
 if NEGF_param.print
     disp(0 + "/" + length(B)*length(E));
 end
@@ -36,9 +36,9 @@ for i = 1:length(E)
 
             output.NEGF_result{j,i} = NEGF(params);
             output.completed(j,i) = 1;
-            if toc > save_time
+            if toc(saveTimer) > save_time
                 %saveData
-                tic
+                saveTimer = tic;
             end
             if NEGF_param.print
                 disp(length(B)*(i-1)+j + "/" + length(B)*length(E));

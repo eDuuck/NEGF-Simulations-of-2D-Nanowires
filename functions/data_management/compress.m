@@ -17,6 +17,9 @@ switch(lower(method{1}))
         N = struct("method","Gomp","height", [], "width", [], "QOI_result",QOI_comp);
         N.method = 'Gomp';
         [N.height,N.width] = size(M);
+    case '8-bit'
+        N = disc_mat(M,"linear");
+        result = true;
     otherwise
         error('Specified method of compression not supported')
 end

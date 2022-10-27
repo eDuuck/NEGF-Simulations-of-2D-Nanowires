@@ -1,9 +1,8 @@
-function [sigma,sigmaIn,g0_ret] = sigma_from_sample(sample,E,B,r0)
-%CONTACTSIGMA Summary of this function goes here
+function [sigma,sigmaIn,g0_ret] = sigma_from_sample(NEGF_param)
+%SIGMA_FROM_SAMPLE Summary of this function goes here
 %   Detailed explanation goes here
-if nargin < 4
-    r0 = 0;
-end
+sample = NEGF_param.sample;
+r0 = NEGF_param.g0;
 
 sigma = cell(1,sample.nbrOfContacts);
 sigmaIn = sigma;
@@ -14,12 +13,12 @@ for j = 1:sample.nbrOfContacts
     con_length = 1;
     y = contact.pos(1); x = contact.pos(2);
     if r0 ~= 0
-        g0 = r0.s0{j};
+        g0 = r0.getS0{j};
     else
         g0 = 0;
     end
-
-    [SGF,g0_ret{j}] = contact_surface(contact,E,ones(size(contact.SC))*B,g0);
+    
+    [SGF,g0_ret{j}] = contact_surface(contact,NEGF_param,g0);
     
     Hpos = zeros(sample.length);
     Hpos(contact.pos(2),contact.pos(2)) = 1;
@@ -31,7 +30,7 @@ for j = 1:sample.nbrOfContacts
 %         eIndx = sIndx + con_width-1;
 %         sigma{j}(sIndx:eIndx,sIndx:eIndx) = SGF;
 %     end
-    sigmaIn{j} = sigma{j} * contact.fermi;
+    sigmaIn{j} = 1i*(sigma{j}-sigma{j}') * contact.fermi;
 end
 
 end

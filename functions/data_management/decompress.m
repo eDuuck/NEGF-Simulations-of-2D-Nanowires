@@ -28,10 +28,11 @@ switch lower(method{1})
         end
     case 'qoi'
         M = QOI_decompress(N,debugstuff);
-        
     case 'gomp'
         A = triu1D(QOI_decompress(N.QOI_result),N.width);
         M = A + A.' - diag(diag(A));
+    case '8-bit'
+        M = contin_mat(N);
 end
 end
 

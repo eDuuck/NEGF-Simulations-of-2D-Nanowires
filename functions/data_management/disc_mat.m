@@ -13,6 +13,12 @@ end
 if lower(method) == "linear"
     realVal = [min(real(A),[],'all'),max(real(A),[],'all')];
     imagVal = [min(imag(A),[],'all'),max(imag(A),[],'all')];
+    if diff(realVal) == 0
+        realVal = [0,1];
+    end 
+    if diff(imagVal) == 0
+        imagVal = [0,1];
+    end
     range = [realVal;imagVal];
     switch byteSize
         case 1
