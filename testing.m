@@ -350,7 +350,7 @@ t0 =  h_bar^2/(2*electron_mass*effective_mass* a^2 * e_charge);
 eps = 4*t0;
 t =-t0;
 
-sample = Sample(25,5,eps,t,a);
+sample = Sample(25,3,eps,t,a);
 %sample.append(ones(sajmple.width,2)*eps*1.1);
 %sample.append(ones(sample.width,5)*eps);
 %sample.append(ones(sample.width,2)*eps*1.1);
@@ -360,7 +360,7 @@ sample.addContact(ones(sample.width,1)*eps,t,[1,sample.length]);
 sample.contacts{end}.fermi = 0;
 sample.contacts{end}.face = -1;
 
-%sample.D = eye(sample.M)*1e-6;
+sample.D = 0;%ones(sample.M)*1e-6;
 %sample.applyNoise(0.1,3);
 
 
@@ -368,6 +368,7 @@ E = t0;
 B = 0:0.1:50;%linspace(0,10,100);
 NEGF_param = NEGF_param(sample,E,B,true);
 NEGF_param.print = true;
+NEGF_param.error_halt = false;
 
 tic
 result = NEGF_map(NEGF_param);
@@ -379,49 +380,26 @@ I = zeros(1,length(result.E));
 I_tot = zeros(1,length(X_vals));
 V = zeros(1,length(X_vals));
 
-midpoint = ceil(result.NEGF_results{1,1}.sample.length/2);
-landua = zeros(length(X_vals),result.NEGF_results{1,1}.sample.width);
+midpoint = ceil(result.NEGF_result{1,1}.sample.length/2);
+landua = zeros(length(X_vals),result.NEGF_result{1,1}.sample.width);
 for y = 1:length(result.B)
     disp(result.B(y));
     for x = 1:length(result.E)
-        res = result.NEGF_results{y,x};
+        res = result.NEGF_result{y,x};
         fermi = NEGF_result_remap(res,"fermi");
         
         imagesc(fermi);
         pause(0.05)
-        
-        gamma1 = res.getGamma(1);
-        gamma2 = res.getGamma(2);
-        sigmaIn = gamma1*res.fermiLevels(1);
-        G = res.getG();
-        Tcoh= real(trace(gamma1*G*gamma2*G'));
-        I(x) = real(trace(sigmaIn*res.getA() - gamma1*res.getGn()));
+
+        I(x) = NEGF_transmission(res);
     end
     ibums = diag(res.getA());
-    landua(y,:) = ibums(1:result.NEGF_results{1,1}.sample.width);
-    I_tot(y) = Tcoh;%trapz(result.E,I);
+    landua(y,:) = ibums(1:result.NEGF_result{1,1}.sample.width);
+    I_tot(y) = I(end);%trapz(result.E,I);
     V(y) = fermi(1,midpoint)-fermi(end,midpoint);
 end
 figure(2)
-plot(X_vals,V./-I_tot);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+plot(X_vals,V./I_tot);
 
 
 
