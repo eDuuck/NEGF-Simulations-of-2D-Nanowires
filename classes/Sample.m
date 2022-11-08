@@ -3,11 +3,30 @@ classdef Sample < matlab.mixin.Copyable
     %simulations are to be applied to.
     %   Creating a sample class can be done by invoking 
     %   SAMPLE(w,l,eps,t,arch). w will describe the width of the wire, l
-    %   describes the length, eps is the value of the basis function at a
+    %   describes the length, eps is the value of the basis functions at a
     %   given point and t describes the interaction between different
     %   points. If t is a vector with multiple values, further neighbors
     %   are also effected. This isn't completed however and needs to be
-    %   touched up upon to work correctly.
+    %   touched up upon to work correctly as not all functions in the NEGF
+    %   library features non-nearest neighbor interaction.
+    %
+    %   SAMPLE has a few functions to ease the construction of the device.
+    %   These are:
+    %       SAMPLE.append(M,side) which appends a matrix M to the channel
+    %       of the device at side specified by 'side'. Side can have the
+    %       values, 'u','d','l','r'. Standard value is 'r' if side isn't
+    %       specified.
+    %
+    %       SAMPLE.applyNoise(amp,corLength) adds a noisefloor to the
+    %       channel with a relative amplitude amp in relation to the max
+    %       value in the channels eps value. The correlation length
+    %       'corLength' is defined in amount of lattice points.
+    %
+    %       SAMPLE.addContact(M, tau, pos) adds a contact at the which
+    %       upper left corner is at position pos. M is the epsilon values
+    %       for the unit cell in the contact and needs to be a matrix with
+    %       the witdth of the contact. Tau is the interacction between
+    %       lattice points inbetween lattice points in the contact.
     
     properties
         width {mustBeNumeric}
@@ -83,7 +102,7 @@ classdef Sample < matlab.mixin.Copyable
             %allready in an compressed state if doComp is left empty.
             %Setting doComp to true guarantees that the sample gets
             %compressed while setting it to false guarantees that it ends
-            %up in an uncompressed raw state.
+            %up in an uncompressed raw state. (Don't use this)
             if nargin > 1
                 change = xor(doComp,obj.compressed);
             else
@@ -100,7 +119,7 @@ classdef Sample < matlab.mixin.Copyable
             status = obj.compressed;
         end
         
-        function append(obj,M, side)
+        function append(obj,M,side)
             %APPEND(M,side) Appends the matrix M to the specified side of
             %the matrix that describes the sample. If side is left empty M
             %is appended to the right of the sample. Side can be set to:
@@ -140,9 +159,11 @@ classdef Sample < matlab.mixin.Copyable
             obj.dim = [obj.width, obj.length];
         end
         
-        function applyNoise(obj, amp, corLength)
-            % 
-            %
+        function applyNoise(obj,amp,corLength)
+            %applyNoise(amp,corLength) adds a noisefloor to the
+            %channel with a relative amplitude amp in relation to the max
+            %value in the channels eps value. The correlation length
+            %'corLength' is defined in amount of lattice points.
             if obj.compressed
                 obj.units = decompress(obj.units, obj.method);
                 obj.compressed = false;
@@ -167,6 +188,12 @@ classdef Sample < matlab.mixin.Copyable
         end
         
         function addContact(obj, M, tau, pos, con_mat, fermi_level)
+            %SAMPLE.addContact(M, tau, pos) adds a contact at the which
+            %upper left corner is at position pos. M is the epsilon values
+            %for the unit cell in the contact and needs to be a matrix with
+            %the witdth of the contact. Tau is the interacction between
+            %lattice points inbetween lattice points in the contact.
+    
             obj.nbrOfContacts = obj.nbrOfContacts + 1;
             if isa(M,'Contact')
                 obj.contacts{obj.nbrOfContacts} = M;

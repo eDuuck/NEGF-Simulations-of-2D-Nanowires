@@ -1,6 +1,11 @@
 function [B] = contin_mat(discrete_rep)
-%CON_MAT Summary of this function goes here
-%   Detailed explanation goes here
+%CONTIN_MAT returns a matrix in the continous space from the structure
+%returned by disc_mat.m. 
+%   CONTIN_MAT(discrete_rep) will extract the reduced original matrix B
+%   from the data structure discrete_rep which is returned from disc_mat.
+%   Currently the extraction from a non-linear reduction hasn't been
+%   implemented.
+
 A = discrete_rep.matrix;
 range = discrete_rep.range;
 switch(lower(discrete_rep.method))

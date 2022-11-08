@@ -1,12 +1,19 @@
-function [M] = decompress(N,method,debugstuff)
-%DECOMPRESS Summary of this function goes here
-%   Detailed explanation goes here
+function [M] = decompress(N,method)
+%DECOMPRESS returns the full size matrix from a compressed datastructure
+%returned from compress.m.
+%   DECOMPRESS(N) uses the data structure N from compress.m to decompress
+%   the data and returns a matrix M.
+%
+%   DECOMPRESS(N,method) only needs to be used if the method isn't
+%   specified in the data structure N. This was used in earlier
+%   implementations when N wasn't a structure but simply a matrix. This
+%   shouldn't be needed to be used.
+
+
 if ~exist("method","var")
     method = {N.method};
 end
-if ~exist("debugstuff","var")
-    debugstuff = [];
-end
+
 if ~iscell(method)
     method = {method};
 end
@@ -27,7 +34,7 @@ switch lower(method{1})
             end
         end
     case 'qoi'
-        M = QOI_decompress(N,debugstuff);
+        M = QOI_decompress(N);
     case 'gomp'
         A = triu1D(QOI_decompress(N.QOI_result),N.width);
         M = A + A.' - diag(diag(A));
@@ -36,18 +43,13 @@ switch lower(method{1})
 end
 end
 
-function M = QOI_decompress(N,debugstuff)
+function M = QOI_decompress(N)
         data = double(N.comp_data);
-        index_position = @(x) mod(3*real(x)+5*imag(x),64)+1;
         old_values = zeros(2^(6),1);
         A = zeros(N.width*N.heigth,1);
         index = 1;
         Aindex = 1;
         while index <= length(data)
-%             if Aindex == 5581
-%                 disp('lmao')
-%             end
-
             header = data(index);
             index = index + 1;
             payLoad = mod(header,2^6);
@@ -90,6 +92,9 @@ function M = QOI_decompress(N,debugstuff)
 end
 
 
+
+%This was only used for debugging. I'll keep it in if tempering with the
+%algorithms needs to be done.
 function plotDebugStuff(A,N,debugstuff,range)
 temp = struct("matrix",reshape(A(1:(N.heigth*N.width)),[N.heigth,N.width]), ...
     "byteSize",1,"range",N.range);

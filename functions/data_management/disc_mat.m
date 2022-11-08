@@ -1,6 +1,24 @@
 function result = disc_mat(A,method,byteSize)
-%DISCRETIZE Summary of this function goes here
-%   Detailed explanation goes here
+%DISC_MAT discretizies a matrix and returns a structure containing the
+%information to transform the discretized matrix back to the original
+%values.
+%   DISC_MAT(A) will return a converted matrix of 8-bit resolution
+%   corresponding to the original matrix A in a data structure. The 
+%   datapoints in this returned structure are linearly seperated between
+%   the max value and min value in matrix A. The matrix A can then be
+%   retrieved by calling contin_mat.m(result). Note that the conversion is
+%   lossy and some accuracy will be lost.
+%
+%   DISC_MAT(A,method) allows the user to specify the method as well.
+%   Currently the methods "Linear" and "non-linear" are supported, however
+%   the "non-linear" method does not seem to improve accuracy. "Non-linear"
+%   uses histograms to attempt to distribute the discrete data points more
+%   close where more data values are.
+%
+%   DISC_MAT(A,method,byteSize) allows the user to specify the data-size of
+%   the returned discrete matrix. Currently 1/2/4/8 byte (8/16/32/64-bit)
+%   is supported.
+
 A = full(A);
 
 if ~exist('byteSize','var')
@@ -48,6 +66,11 @@ else
 end
 end
 
+
+
+%There was an attempt to place the discrete data values seperated not
+%linearly seperated to achieve better accuracy without increasing data
+%size using histocounts. This wasn't succesful however.
 function [range,values] = non_lin_dest(data,byteSize)
 range = zeros(1,2^(byteSize*8));
 data1D = sort(reshape(data,[],1));

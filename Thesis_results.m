@@ -240,16 +240,17 @@ t0 =  h_bar^2/(2*electron_mass*effective_mass* a^2);
 t =-t0;
 eps = Ec + 4*t0;
 
-wid = 22; len = 40;  %Width 1; Length 40.
+wid = 22; len = 40;  
 
 E = Ec + 10*t0/10;
 B = 0:0.02:12;
+B = 0:0.05:3;
 
 
 figure(6);clf
 
 hold on
-noiseLevels = [0 0.01 0.025 0.05 0.1];
+noiseLevels = [0];% 0.01 0.025 0.05 0.1];
 totTime = tic;
 calcTimes = zeros(length(noiseLevels),1);
 

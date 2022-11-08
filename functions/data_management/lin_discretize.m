@@ -2,7 +2,9 @@ function [result] = lin_discretize(A,byteSize)
 %LIN_DISCRETIZE Returns the matrix B that is a linear disctetization of the matrix
 %A with the resolution of bytesize. The second returned matrix RANGE is
 %descriptive and necesarry to restore A.
-%   Detailed explanation goes here
+%   LIN_DISCRETIZE is doing the same thing as disc_mat.m but does only
+%   feature linear discrete space for the returned structure.
+
 A = full(A);
 realVal = [min(real(A),[],'all'),max(real(A),[],'all')];
 imagVal = [min(imag(A),[],'all'),max(imag(A),[],'all')];

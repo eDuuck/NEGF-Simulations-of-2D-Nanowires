@@ -1,8 +1,35 @@
 function [N,method,result] = compress(M,method)
-%COMPRESS Summary of this function goes here
-%   Detailed explanation goes here
+%COMPRESS compresses a matrix M according to specified method and returns
+%the data packaged in N.
+%   Except returning the compressed matrix, the method chosen is also
+%   returned. This is important for the block method which also needs to
+%   specify the direction of compression which will be picked as the
+%   optimal direction is not mentioned. Moreover, COMPRESS will also return
+%   a result if the compression was successful or not. (Should always be now).
+% 
+%   Supported methods are:
+%
+%   "QOI" : Based on the QOI image compression. This also reduces the data
+%   bytesize to 8-bit.
+%   
+%   "8-bit" : Simply reduces the matrix to a 8-bit format instead of the
+%   64-bit format used in MATLAB. The fastest compression and uncompression.
+%
+%   "gomp" : (g-compression) Works if the matrix is symmetric along the
+%   diagonal. This then only saves the one side and then performes QOI on
+%   the remaining data.
+%
+%   "block" : A simple lossless method that should only be used for
+%   matrices that are very homogeneous.
+%
+%   
+%   Support for 16-bit and 32-bit structures are not supported for QOI or
+%   GOMP currently. The code needs to be improved for these scenarios if
+%   8-bit is not sufficient.
+
+
 if ~exist('method','var')
-    method = {'block',3};
+    method = {'QOI'};
 elseif ~iscell(method)
     method = {method};
 end
@@ -13,6 +40,7 @@ switch(lower(method{1}))
     case 'qoi'
         [N,result] = QOI_compression(M,method);
     case 'gomp'
+        %Triu1D converts the top triangular matrix of M to a 1D vector.
         [QOI_comp,result] = QOI_compression(triu1D(M),method);
         N = struct("method","Gomp","height", [], "width", [], "QOI_result",QOI_comp);
         N.method = 'Gomp';
@@ -72,9 +100,11 @@ if sum(M~=0,'all')*2 < length(N)
 end
 end
 
+
+
 function [N,result] = QOI_compression(M,method)
 [height,width] = size(M);
-templength = ceil(2.5*numel(M));    %Needs to use non-linear discretization if fft is to be used.
+templength = ceil(2.5*numel(M));
 if length(method) == 1
     M = disc_mat(M,"linear");
     temp = zeros(1,templength,'uint8');
@@ -89,13 +119,13 @@ else
             old_values = zeros(2^(6),1,'uint8'); %Standard case
             temp = zeros(1,templength,'uint8');
         case 2
-            old_values = zeros(2^(6),1,'uint16'); %Extra accurate
+            old_values = zeros(2^(6),1,'uint16'); %Support for these aren't done yet.
             temp = zeros(1,templength,'uint8');
         case 4
-            old_values = zeros(2^(6),1,'uint32'); %Special case accuracy
+            old_values = zeros(2^(6),1,'uint32'); 
             temp = zeros(1,templength,'uint32');
         case 8
-            old_values = zeros(2^(6),1,'uint64'); %Just stupid.
+            old_values = zeros(2^(6),1,'uint64'); 
             temp = zeros(1,templength,'uint64');
     end
     shiftLen = method{2}*8 - 2;
@@ -103,9 +133,6 @@ end
 modRange = 2^(byteSize*8);
 
 data = double(reshape(M.matrix,1,[]));
-%index_position = @(x) mod(3*real(x)+5*imag(x),64)+1; Turns out using a
-%handle is very slow.
-
 
 temp(1) = bitshift(0b10, 6);      %First cell value is always a new value.
 temp(2) = real(data(1));
@@ -114,7 +141,6 @@ indPos = mod(3*real(data(1))+5*imag(data(1)),64)+1;
 old_values(indPos) = data(1);
 tempIndex = 4;
 curIndex = 2;
-
 
 while curIndex <= length(data)
     curData = data(curIndex);

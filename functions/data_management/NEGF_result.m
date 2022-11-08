@@ -3,18 +3,36 @@ classdef NEGF_result < matlab.mixin.Copyable
     %to be analyzed in later code. NEGF_RESULT contains multiple properties
     %that is used for future calculations and data analysis. NEGF_RESULT 
     %also contains functions to compress the data and extract the 
-    %compressed data.
+    %compressed data. To retrieve the data use the NEGF_RESULT.getX
+    %functions.
     %
-    %   NEGF_RESULT.getG() returns the greens function matrix from the NEGF
-    %   result and should always be used as it will decompress G if it
-    %   allready is compressed.
+    %   NEGF_RESULT.getG() returns the greens function matrix.
     %
-    %   NEGF_RESULT.reduce() compresses some of the matrices in the
+    %   NEGF_RESULT.getGn() returns the electron density matrix.
+    %
+    %   NEGF_RESULT.getA() returns the spectral function matrix.
+    %
+    %   NEGF_RESULT.getSigma() returns the Sigmas in a cell array. If the
+    %   Sigma matrix for a specific contact is desired, use 
+    %   NEGF_RESULT.getSigma(contact).
+    %
+    %   NEGF_RESULT.getSigmaIn() returns the SigmaIn in a cell array. If 
+    %   the SigmaIn matrix for a specific contact is desired, use 
+    %   NEGF_RESULT.getSigmaIn(contact).
+    %
+    %   NEGF_RESULT.getSigma0() returns the scattering matrix Sigma0.
+    %
+    %   NEGF_RESULT.getSigma0In() returns the scattering matrix Sigma0In.
+    %
+    %   NEGF_RESULT.getS0(contact) returns the guess for the contact SGF.
+    %
+    %   NEGF_RESULT.compress() compresses some of the matrices in the
     %   NEGF result. This is a lossy compression and will currently reduce
     %   the resolution of the data to 8 bits. On top of this loss-less
     %   compression (QOI) is used to further compress data and using the
     %   symmetry of cerrtain matrices to further save memory. A reduction
-    %   of at least 8x should be expected.
+    %   of at least 8x should be expected. If uncompression is desired, use
+    %   NEGF_result.compress(false).
 
     properties
         %G
@@ -39,8 +57,6 @@ classdef NEGF_result < matlab.mixin.Copyable
 
     methods
         function obj = NEGF_result(sample, E,B)
-            %NEGF_RESULT Construct an instance of this class
-            %   Detailed explanation goes here
             obj.sample = sample;
             obj.E = E;
             obj.B = B;
@@ -49,7 +65,6 @@ classdef NEGF_result < matlab.mixin.Copyable
         end
 
         function compress(obj,doReduce)
-            %REDUCE Lmao, you really reading this?
             %   Detailed explanation goes here
             if ~exist("doReduce", "var")
                 doReduce = true;

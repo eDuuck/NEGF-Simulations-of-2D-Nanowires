@@ -1,4 +1,8 @@
 function N = triu1D(M,side)
+%TRIU1D will return a 1 dimensional vector representing the top triangular
+%matrix of M. If a 1D-vector is fed into TRIU1D, a restored 2D matrix will
+%be returned.
+
 if min(size(M)) ~= 1
     len = size(M,2);
     N = zeros((len^2+len)/2,1);

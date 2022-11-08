@@ -343,7 +343,7 @@ getSize(results,2)
 clear
 load('physical_constants.mat');
 
-Ec = 1;
+Ec = 0;
 a = 25E-10;
 effective_mass = 0.1;
 t0 =  h_bar^2/(2*electron_mass*effective_mass* a^2 * e_charge);
@@ -365,10 +365,11 @@ sample.D = 0;%ones(sample.M)*1e-6;
 
 
 E = t0;
-B = 0:0.1:50;%linspace(0,10,100);
+B = 0:0.1:10;%linspace(0,10,100);
 NEGF_param = NEGF_param(sample,E,B,true);
+NEGF_param.errorMarg = 1e-9;
 NEGF_param.print = true;
-NEGF_param.error_halt = false;
+NEGF_param.error_halt = true;
 
 tic
 result = NEGF_map(NEGF_param);
@@ -388,8 +389,8 @@ for y = 1:length(result.B)
         res = result.NEGF_result{y,x};
         fermi = NEGF_result_remap(res,"fermi");
         
-        imagesc(fermi);
-        pause(0.05)
+        imagesc(fermi,[0 1]);
+        pause(0.5)
 
         I(x) = NEGF_transmission(res);
     end

@@ -1,22 +1,22 @@
 function [result] = NEGF(NEGF_param)
-%NEGF Summary of this function goes here
-%   NEGF(sample,E,B,errorMarg,rate,it_lim,reduce,G0)
+%NEGF performs the NEGF simulation based on parameters specified in
+%NEGF_param. These parameters need to contain a sample, energy values and
+%contacts.
 E = NEGF_param.E(1);
 B = NEGF_param.B(1);
-sample = NEGF_param.sample;
-
 it_lim = NEGF_param.it_lim;
 rate = NEGF_param.rate;
 errorMarg = NEGF_param.errorMarg;
-
+sample = NEGF_param.sample;
 
 result = NEGF_result(sample,E,B);
-H = hamiltonian(sample,B);
+
 
 %Not sure if scaling is needed.
 %scaling = 1/(rms(E)+rms(B)+min(abs(sample.units),[],'all') + min(abs(sample.t)));
 scaling = 1;
 
+%First step extract Sigma from the contacts.
 [sigma,sigmaIn,s0] = sigma_from_sample(NEGF_param);
 sigSum = sparse(sample.M,sample.M);
 sigInSum = sparse(sample.M,sample.M);
@@ -24,6 +24,9 @@ for j = 1:length(sigma)
     sigSum = sigSum + sigma{j};
     sigInSum = sigInSum + sigmaIn{j};
 end
+
+
+H = hamiltonian(sample,B);
 H = H*scaling; E = E*scaling; B = B*scaling;
 sigSum = sigSum * scaling; sigInSum = sigInSum * scaling;
 
@@ -96,7 +99,7 @@ result.sigma0In = sigma0In/scaling;
 result.fermiLevels = fermiLevels;
 result.s0 = s0;
 if NEGF_param.compress
-    if B == 0 %When no magnetic fields are present, matrices are symmetric. (It seems)
+    if B == 0 %When no magnetic fields are present, matrices are symmetric.
         result.compressionMethod = 'gomp'; 
     end
     result.compress(true);

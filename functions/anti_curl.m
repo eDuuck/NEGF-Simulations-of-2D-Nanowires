@@ -1,6 +1,8 @@
 function [A] = anti_curl(B,a,c)
-%ANTI_CURL Summary of this function goes here
-%   Detailed explanation goes here
+%ANTI_CURL A very simple function that returns the magnetic vector 
+%potential to the magnetic field B. Note that B should only contain the Z
+%component. The value a specifies the seperation between lattice points in
+%B. C can be used to specify the constant dAydx.
 [width, length] = size(B);
 A = zeros(width, length,2);
 
